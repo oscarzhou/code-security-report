@@ -12,6 +12,7 @@ type Result struct {
 	Medium          int64 `json:"medium"`
 	Low             int64 `json:"low"`
 	Unknown         int64 `json:"unknown"`
+	Total           int64 `json:"total"`
 	FixableCritical int64
 	FixableHigh     int64
 	FixableMedium   int64
@@ -21,10 +22,18 @@ type Result struct {
 	Status          string `json:"status"`
 }
 
-func (r *Result) Summarize() {
-	stringBuilder := fmt.Sprintf("Tested %d dependencies for known issues\n%d critical, %d high, %d medium, %d low, %d unknown", r.ScannedObjects, r.Critical, r.High, r.Medium, r.Low, r.Unknown)
+func (r *Result) Output(outputType string) {
+	if outputType == "matrix" {
+		results := []Result{*r}
 
-	r.Summary = stringBuilder
+		ret, err := json.Marshal(results)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		fmt.Println(string(ret))
+		return
+	}
 
 	ret, err := json.Marshal(r)
 	if err != nil {

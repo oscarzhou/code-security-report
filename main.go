@@ -16,6 +16,7 @@ func main() {
 	flag.StringVar(&config.Action, "action", "summary,ls", "summary")
 	flag.StringVar(&config.ReportType, "report-type", "snyk,trivy,gosec", "")
 	flag.StringVar(&config.Path, "path", "/path/to/file.json", "")
+	flag.StringVar(&config.OutputType, "output-type", "matrix", "")
 	flag.Parse()
 
 	switch config.Action {
@@ -53,7 +54,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		result.Summarize()
+		result.Output(config.OutputType)
 	case "ls":
 		b, err := exec.Command("ls", "-lha", config.Path).Output()
 		if err != nil {
@@ -69,4 +70,5 @@ type GlobalConfig struct {
 	Action     string
 	ReportType string
 	Path       string
+	OutputType string
 }
