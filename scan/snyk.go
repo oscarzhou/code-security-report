@@ -2,6 +2,7 @@ package scan
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/oscarzhou/scan-report/prototypes"
 )
@@ -54,6 +55,7 @@ func (s *SnykScanner) Scan(in []byte) (Result, error) {
 			}
 
 		}
+		result.Total++
 	}
 
 	result.ScannedObjects = s.DependencyCount
@@ -63,6 +65,25 @@ func (s *SnykScanner) Scan(in []byte) (Result, error) {
 	} else {
 		result.Status = "success"
 	}
+
+	// build summary
+	stringBuilder := fmt.Sprintf("Tested %d dependencies for known issues.", result.ScannedObjects)
+	if result.Critical > 0 {
+		stringBuilder = fmt.Sprintf("%s Critical:%d", stringBuilder, result.Critical)
+	}
+	if result.High > 0 {
+		stringBuilder = fmt.Sprintf("%s High:%d", stringBuilder, result.High)
+	}
+	if result.Medium > 0 {
+		stringBuilder = fmt.Sprintf("%s Medium:%d", stringBuilder, result.Medium)
+	}
+	if result.Low > 0 {
+		stringBuilder = fmt.Sprintf("%s Low:%d", stringBuilder, result.Low)
+	}
+	if result.Unknown > 0 {
+		stringBuilder = fmt.Sprintf("%s Unknown:%d", stringBuilder, result.Unknown)
+	}
+	result.Summary = stringBuilder
 
 	return result, nil
 }
