@@ -2,26 +2,27 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
-	"os/exec"
 
+	"github.com/oscarzhou/scan-report/cmd"
 	"github.com/oscarzhou/scan-report/scan"
 )
 
 func main() {
-
 	var config GlobalConfig
-	flag.StringVar(&config.Action, "action", "summary,ls", "summary")
-	flag.StringVar(&config.ReportType, "report-type", "snyk,trivy,gosec", "")
-	flag.StringVar(&config.Path, "path", "/path/to/file.json", "")
-	flag.StringVar(&config.OutputType, "output-type", "matrix", "")
+	flag.StringVar(&config.ReportType, "report-type", "", "snyk,trivy,gosec")
+	flag.StringVar(&config.Path, "path", "", "/path/to/file.json")
+	flag.StringVar(&config.OutputType, "output-type", "", "matrix")
 	flag.Parse()
 
-	switch config.Action {
-	case "summary":
+	args := flag.Args()
+	switch args[0] {
+	case "version":
+		cmd.GetVersion()
+		break
 
+	case "summary":
 		if config.ReportType == "" {
 			log.Fatal("report type not set")
 		} else {
@@ -56,18 +57,12 @@ func main() {
 
 		result.Output(config.OutputType)
 	case "ls":
-		b, err := exec.Command("ls", "-lha", config.Path).Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(string(b))
-
+		cmd.List(config.Path)
+		break
 	}
-
 }
 
 type GlobalConfig struct {
-	Action     string
 	ReportType string
 	Path       string
 	OutputType string
