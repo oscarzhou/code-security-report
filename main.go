@@ -59,6 +59,10 @@ func main() {
 	case "ls":
 		cmd.List(config.Path)
 		break
+
+	case "help":
+		cmd.Help()
+		break
 	}
 }
 
