@@ -1,1 +1,1 @@
-docker build -t oscarzhou/scan-report:0.1.0 -f Dockerfile .
+docker build -t oscarzhou/scan-report:0.1.2 -t oscarzhou/scan-report:latest -f Dockerfile .

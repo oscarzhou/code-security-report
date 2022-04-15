@@ -7,8 +7,8 @@
 
 ### Run with docker image
 
-`docker run --rm -v $PWD/fixtures:/data oscarzhou/scan-report:0.1.0 -action=summary -report-type=snyk -path="/data/js-snyk.json"`
+`docker run --rm -v $PWD/fixtures:/data oscarzhou/scan-report:latest -action=summary -report-type=snyk -path="/data/js-snyk.json"`
 
 ### Debug with ls command
 
-`docker run --rm -v $PWD/fixtures:/data oscarzhou/scan-report:0.1.0 -action=ls -path=/data`
+`docker run --rm -v $PWD/fixtures:/data oscarzhou/scan-report:latest -action=ls -path=/data`
