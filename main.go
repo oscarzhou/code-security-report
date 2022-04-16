@@ -10,14 +10,17 @@ import (
 )
 
 func main() {
+	command := os.Args[1]
+	os.Args = append(os.Args[:1], os.Args[2:]...)
+
 	var config GlobalConfig
 	flag.StringVar(&config.ReportType, "report-type", "", "snyk,trivy,gosec")
-	flag.StringVar(&config.Path, "path", "", "/path/to/file.json")
+	flag.StringVar(&config.Path, "path", "", "/path/to/current-file.json")
+	flag.StringVar(&config.CompareTo, "compare-to", "", "/path/to/previous-file.json")
 	flag.StringVar(&config.OutputType, "output-type", "", "matrix")
 	flag.Parse()
 
-	args := flag.Args()
-	switch args[0] {
+	switch command {
 	case "version":
 		cmd.GetVersion()
 		break
@@ -43,19 +46,24 @@ func main() {
 		var s scan.Scanner
 		switch config.ReportType {
 		case "snyk":
-			s = &scan.SnykScanner{}
+			s, err = scan.NewSnykScanner(dat)
+
 		case "trivy":
-			s = &scan.TrivyScanner{}
 		case "gosec":
 
 		}
 
-		result, err := s.Scan(dat)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		result, err := s.Scan()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		result.Output(config.OutputType)
+
 	case "ls":
 		cmd.List(config.Path)
 		break
@@ -70,4 +78,5 @@ type GlobalConfig struct {
 	ReportType string
 	Path       string
 	OutputType string
+	CompareTo  string
 }

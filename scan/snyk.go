@@ -12,12 +12,18 @@ type SnykScanner struct {
 	scannedVulnerabilities map[string]struct{}
 }
 
-func (s *SnykScanner) Scan(in []byte) (Result, error) {
-	var result Result
-	err := json.Unmarshal(in, s)
+func NewSnykScanner(in []byte) (*SnykScanner, error) {
+	snyk := &SnykScanner{}
+
+	err := json.Unmarshal(in, &snyk)
 	if err != nil {
-		return result, err
+		return snyk, err
 	}
+	return snyk, nil
+}
+
+func (s *SnykScanner) Scan() (Result, error) {
+	var result Result
 
 	s.scannedVulnerabilities = make(map[string]struct{})
 
