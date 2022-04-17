@@ -34,7 +34,7 @@ function push_image() {
 	read -p "patch: " PATCH
 
 	semver=${MAJOR}.${MINOR}.${PATCH}
-	docker image oscarzhou/scan-report:${semver}
+	docker image push oscarzhou/scan-report:${semver}
 }
 
 function main() {
