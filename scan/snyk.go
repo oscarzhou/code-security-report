@@ -152,7 +152,9 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 			}
 		}
 
-		if !matched {
+		_, exist := compared.ScannedVulnerabilities[currentVuln.ID]
+
+		if !matched && !exist {
 			if currentVuln.Severity == "critical" {
 				newFound.Critical++
 			} else if currentVuln.Severity == "high" {
