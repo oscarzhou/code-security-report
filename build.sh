@@ -1,1 +1,50 @@
-docker build -t oscarzhou/scan-report:0.1.2 -t oscarzhou/scan-report:latest -f Dockerfile .
+
+set -x
+
+function build_binary() {
+	mkdir -p binary
+
+	# the go get adds 8 seconds
+	go get -t -d -v ./...
+
+	# the build takes 2 seconds
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build \
+		--installsuffix cgo \
+		--ldflags '-s' \
+		-o "binary/scanreport" \
+		.
+}
+
+function build_docker() {
+	printf "Input image tag\n"
+	read -p "major: " MAJOR
+	read -p "minor: " MINOR
+	read -p "patch: " PATCH
+
+	semver=${MAJOR}.${MINOR}.${PATCH}
+	build_binary
+	docker build -t oscarzhou/scan-report:${semver} -t oscarzhou/scan-report:latest -f Dockerfile .
+}
+
+
+function push_image() {
+	printf "Input image tag\n"
+	read -p "major: " MAJOR
+	read -p "minor: " MINOR
+	read -p "patch: " PATCH
+
+	semver=${MAJOR}.${MINOR}.${PATCH}
+	docker image oscarzhou/scan-report:${semver}
+}
+
+function main() {
+	if [[ "$1" == "build_binary" ]]; then
+		build_binary
+	elif [[ "$1" == "build_docker" ]]; then 
+		build_docker
+	elif [[ "$1" == "push_image" ]]; then 
+		push_image
+	fi
+}
+
+main "$@"
