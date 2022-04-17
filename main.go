@@ -38,15 +38,13 @@ func main() {
 			log.Fatal("path not set")
 		}
 
-		dat, err := os.ReadFile(config.Path)
-		if err != nil {
-			log.Fatalf("file %s not found ", config.Path)
-		}
-
-		var s scan.Scanner
+		var (
+			s   scan.Scanner
+			err error
+		)
 		switch config.ReportType {
 		case "snyk":
-			s, err = scan.NewSnykScanner(dat)
+			s, err = scan.NewSnykScanner(config.Path)
 
 		case "trivy":
 		case "gosec":
@@ -58,6 +56,54 @@ func main() {
 		}
 
 		result, err := s.Scan()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		result.Output(config.OutputType)
+
+	case "diff":
+		if config.ReportType == "" {
+			log.Fatal("report type not set")
+		} else {
+			if !(config.ReportType == "snyk" || config.ReportType == "trivy" || config.ReportType == "gosec") {
+				log.Fatal("unrecoginize report type")
+			}
+		}
+
+		if config.Path == "" {
+			log.Fatal("path not set")
+		}
+
+		if config.CompareTo == "" {
+			log.Fatal("compared path not set")
+		}
+
+		var (
+			s    scan.Scanner
+			base scan.Scanner
+			err  error
+		)
+
+		switch config.ReportType {
+		case "snyk":
+			s, err = scan.NewSnykScanner(config.Path)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			base, err = scan.NewSnykScanner(config.CompareTo)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+		case "trivy":
+
+		case "gosec":
+
+		}
+
+		result, err := s.Diff(base)
 		if err != nil {
 			log.Fatal(err)
 		}
