@@ -10,14 +10,17 @@ import (
 )
 
 func main() {
+	command := os.Args[1]
+	os.Args = append(os.Args[:1], os.Args[2:]...)
+
 	var config GlobalConfig
 	flag.StringVar(&config.ReportType, "report-type", "", "snyk,trivy,gosec")
-	flag.StringVar(&config.Path, "path", "", "/path/to/file.json")
+	flag.StringVar(&config.Path, "path", "", "/path/to/current-file.json")
+	flag.StringVar(&config.CompareTo, "compare-to", "", "/path/to/previous-file.json")
 	flag.StringVar(&config.OutputType, "output-type", "", "matrix")
 	flag.Parse()
 
-	args := flag.Args()
-	switch args[0] {
+	switch command {
 	case "version":
 		cmd.GetVersion()
 		break
@@ -35,27 +38,78 @@ func main() {
 			log.Fatal("path not set")
 		}
 
-		dat, err := os.ReadFile(config.Path)
-		if err != nil {
-			log.Fatalf("file %s not found ", config.Path)
-		}
-
-		var s scan.Scanner
+		var (
+			s   scan.Scanner
+			err error
+		)
 		switch config.ReportType {
 		case "snyk":
-			s = &scan.SnykScanner{}
+			s, err = scan.NewSnykScanner(config.Path)
+
 		case "trivy":
-			s = &scan.TrivyScanner{}
 		case "gosec":
 
 		}
 
-		result, err := s.Scan(dat)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		result, err := s.Scan()
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		result.Output(config.OutputType)
+
+	case "diff":
+		if config.ReportType == "" {
+			log.Fatal("report type not set")
+		} else {
+			if !(config.ReportType == "snyk" || config.ReportType == "trivy" || config.ReportType == "gosec") {
+				log.Fatal("unrecoginize report type")
+			}
+		}
+
+		if config.Path == "" {
+			log.Fatal("path not set")
+		}
+
+		if config.CompareTo == "" {
+			log.Fatal("compared path not set")
+		}
+
+		var (
+			s    scan.Scanner
+			base scan.Scanner
+			err  error
+		)
+
+		switch config.ReportType {
+		case "snyk":
+			s, err = scan.NewSnykScanner(config.Path)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			base, err = scan.NewSnykScanner(config.CompareTo)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+		case "trivy":
+
+		case "gosec":
+
+		}
+
+		result, err := s.Diff(base)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		result.Output(config.OutputType)
+
 	case "ls":
 		cmd.List(config.Path)
 		break
@@ -70,4 +124,5 @@ type GlobalConfig struct {
 	ReportType string
 	Path       string
 	OutputType string
+	CompareTo  string
 }
