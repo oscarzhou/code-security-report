@@ -47,6 +47,8 @@ func main() {
 			s, err = scan.NewSnykScanner(config.Path)
 
 		case "trivy":
+			s, err = scan.NewTrivyScanner(config.Path)
+
 		case "gosec":
 
 		}
@@ -98,6 +100,15 @@ func main() {
 			}
 
 		case "trivy":
+			s, err = scan.NewTrivyScanner(config.Path)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			base, err = scan.NewTrivyScanner(config.CompareTo)
+			if err != nil {
+				log.Fatal(err)
+			}
 
 		case "gosec":
 

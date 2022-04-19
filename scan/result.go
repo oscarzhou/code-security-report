@@ -5,8 +5,13 @@ import (
 	"fmt"
 )
 
+const (
+	RESULT_SUCCESS string = "success"
+	RESULT_FAILURE string = "failure"
+)
+
 type Result struct {
-	ScannedObjects  int64 `json:"scannedObjects"`
+	ScannedObjects  int64 `json:",omitempty;scannedObjects"`
 	Critical        int64 `json:"critical"`
 	High            int64 `json:"high"`
 	Medium          int64 `json:"medium"`
@@ -26,12 +31,13 @@ func (r *Result) GetTotal() {
 	r.Total = r.Critical + r.High + r.Medium + r.Low + r.Unknown
 }
 
-func (r *Result) Summarize() {
+func (r *Result) SetSummary() {
+	r.Summary = GetCommonSummary(r)
+}
+
+func GetCommonSummary(r *Result) string {
 	// build summary
-	stringBuilder := ""
-	if r.ScannedObjects > 0 {
-		stringBuilder = fmt.Sprintf("Tested %d dependencies for known issues.", r.ScannedObjects)
-	}
+	stringBuilder := fmt.Sprintf("%s Total:", r.Summary)
 	if r.Critical > 0 {
 		stringBuilder = fmt.Sprintf("%s Critical:%d", stringBuilder, r.Critical)
 	}
@@ -47,11 +53,10 @@ func (r *Result) Summarize() {
 	if r.Unknown > 0 {
 		stringBuilder = fmt.Sprintf("%s Unknown:%d", stringBuilder, r.Unknown)
 	}
-
 	if r.Total == 0 {
 		stringBuilder = fmt.Sprintf("%s Nothing found", stringBuilder)
 	}
-	r.Summary = stringBuilder
+	return stringBuilder
 }
 
 func (r *Result) Output(outputType string) {
