@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+	<style>
+    	table: {border: 1px solid black}
+    </style>
+</head>
+<body>
+
+
+Project: {{ .Name }}
+
+<br/>
+
+Total: {{ .Total }} (UNKNOWN: {{ .Unknown }}, LOW: {{ .Low }}, MEDIUM: {{ .Medium }}, HIGH: {{ .High }}, CRITICAL: {{ .Critical }})
+
+
+<table>
+	<tr>
+      <th>MODULE NAME</th>
+      <th>VULNERABILITY ID</th>
+      <th>SEVERITY</th>
+      <th>INSTALLED VERSION</th>
+      <th>FXIED VERSION</th>
+      <th>TITLE</th>
+    </tr>
+    {{ range .Vulnerabilities }}
+	<tr>
+    	<td>{{ .ModuleName }}</td>
+        <td>{{ .ID }}</td>
+        <td>{{ .Severity }}</td>
+        <td>{{ .Version }}</td>
+        <td>{{ .FixedIn }}</td>
+        <td>{{ .Title }}</td>
+    </tr>
+    {{ end }}
+</table>
+
+</body>
+</html>
