@@ -17,7 +17,8 @@ func main() {
 	flag.StringVar(&config.ReportType, "report-type", "", "snyk,trivy,gosec")
 	flag.StringVar(&config.Path, "path", "", "/path/to/current-file.json")
 	flag.StringVar(&config.CompareTo, "compare-to", "", "/path/to/previous-file.json")
-	flag.StringVar(&config.OutputType, "output-type", "", "matrix")
+	flag.StringVar(&config.OutputType, "output-type", "", "matrix,table")
+	flag.BoolVar(&config.Export, "export", false, "export the result to a html file")
 	flag.Parse()
 
 	switch command {
@@ -57,12 +58,19 @@ func main() {
 			log.Fatal(err)
 		}
 
-		result, err := s.Scan()
-		if err != nil {
-			log.Fatal(err)
-		}
+		if config.Export {
+			err = s.Export(config.OutputType)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		result.Output(config.OutputType)
+		} else {
+			result, err := s.Scan()
+			if err != nil {
+				log.Fatal(err)
+			}
+			result.Output(config.OutputType)
+		}
 
 	case "diff":
 		if config.ReportType == "" {
@@ -136,4 +144,5 @@ type GlobalConfig struct {
 	Path       string
 	OutputType string
 	CompareTo  string
+	Export     bool
 }

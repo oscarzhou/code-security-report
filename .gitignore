@@ -3,3 +3,4 @@
 dockerrun.sh
 execrun.sh
 scan-report
+/output

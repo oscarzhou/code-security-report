@@ -267,3 +267,7 @@ func (s *TrivyScanner) getSummary() string {
 
 	return stringBuilder
 }
+
+func (s *TrivyScanner) Export(outputType string) error {
+	return nil
+}

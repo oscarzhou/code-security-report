@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"os"
+	"time"
 
 	"github.com/oscarzhou/scan-report/prototypes"
 )
@@ -192,6 +194,10 @@ func (s *SnykScanner) getShortVulnerabilities() []prototypes.ShortSnykVulnerabil
 			ID:         v.ID,
 			ModuleName: v.ModuleName,
 			Severity:   v.Severity,
+			CvssScore:  v.CvssScore,
+			Title:      v.Title,
+			Version:    v.Version,
+			FixedIn:    v.FixedIn,
 		})
 
 	}
@@ -206,4 +212,52 @@ func (s *SnykScanner) getSummary() string {
 	}
 
 	return stringBuilder
+}
+
+func (s *SnykScanner) ClearCache() {
+	s.ScannedVulnerabilities = make(map[string]struct{})
+}
+
+func (s *SnykScanner) Export(outputType string) error {
+	result, err := s.Scan()
+	if err != nil {
+		return err
+	}
+
+	s.ClearCache()
+
+	vulns := s.getShortVulnerabilities()
+
+	snykTmpl := prototypes.SnykTemplate{
+		Name:            s.Snyk.ProjectName,
+		Vulnerabilities: vulns,
+		Critical:        result.Critical,
+		High:            result.High,
+		Medium:          result.Medium,
+		Low:             result.Low,
+		Unknown:         result.Unknown,
+		Total:           result.Total,
+	}
+
+	name := fmt.Sprintf("scan-report-%s-%d.html", snykTmpl.Name, time.Now().Unix())
+	f, err := os.OpenFile("./output/"+name, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	switch outputType {
+	case "table":
+		tmpl, err := template.ParseFiles("templates/html-table.go.tmpl")
+		if err != nil {
+			return err
+		}
+
+		tmpl.Execute(f, &snykTmpl)
+
+	case "list":
+
+	}
+
+	return nil
 }
