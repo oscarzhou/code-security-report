@@ -34,36 +34,36 @@ func NewSnykScanner(path string) (*SnykScanner, error) {
 func (s *SnykScanner) Scan() (Result, error) {
 	var result Result
 
-	for _, v := range s.Snyk.Vulnerabilities {
-		_, ok := s.ScannedVulnerabilities[v.ID]
+	for _, vuln := range s.Snyk.Vulnerabilities {
+		_, ok := s.ScannedVulnerabilities[vuln.ID]
 		if ok {
 			continue
 		}
 
-		s.ScannedVulnerabilities[v.ID] = struct{}{}
+		s.ScannedVulnerabilities[vuln.ID] = struct{}{}
 
-		if v.Severity == "critical" {
+		if vuln.Severity == "critical" {
 			result.Critical++
-		} else if v.Severity == "high" {
+		} else if vuln.Severity == "high" {
 			result.High++
-		} else if v.Severity == "medium" {
+		} else if vuln.Severity == "medium" {
 			result.Medium++
-		} else if v.Severity == "low" {
+		} else if vuln.Severity == "low" {
 			result.Low++
-		} else if v.Severity == "unknown" {
+		} else if vuln.Severity == "unknown" {
 			result.Unknown++
 		}
 
-		if v.IsPatchable || v.IsUpgradable {
-			if v.Severity == "critical" {
+		if vuln.IsPatchable || vuln.IsUpgradable {
+			if vuln.Severity == "critical" {
 				result.FixableCritical++
-			} else if v.Severity == "high" {
+			} else if vuln.Severity == "high" {
 				result.FixableHigh++
-			} else if v.Severity == "medium" {
+			} else if vuln.Severity == "medium" {
 				result.FixableMedium++
-			} else if v.Severity == "low" {
+			} else if vuln.Severity == "low" {
 				result.FixableLow++
-			} else if v.Severity == "unknown" {
+			} else if vuln.Severity == "unknown" {
 				result.FixableUnknown++
 			}
 		}
@@ -71,20 +71,15 @@ func (s *SnykScanner) Scan() (Result, error) {
 	result.GetTotal()
 	result.ScannedObjects = s.Snyk.DependencyCount
 	if result.Total > 0 {
-		result.Status = "failure"
+		result.Status = RESULT_FAILURE
 	} else {
-		result.Status = "success"
+		result.Status = RESULT_SUCCESS
 	}
 
-	result.Summarize()
+	result.Summary = s.getSummary()
+	result.SetSummary()
 
 	return result, nil
-}
-
-type shortVulnearibility struct {
-	ID         string
-	ModuleName string
-	Severity   string
 }
 
 func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
@@ -139,7 +134,8 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 		}
 	}
 	fixed.GetTotal()
-	fixed.Summarize()
+	fixed.Summary = s.getSummary()
+	fixed.SetSummary()
 	result.Fixed = fixed
 
 	// scan the new vulnerabilities
@@ -169,21 +165,22 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 		}
 	}
 	newFound.GetTotal()
-	newFound.Summarize()
+	newFound.Summary = s.getSummary()
+	newFound.SetSummary()
 	result.NewFound = newFound
 
 	if result.NewFound.Total == 0 {
-		result.Status = "success"
+		result.Status = RESULT_SUCCESS
 	} else {
-		result.Status = "failure"
+		result.Status = RESULT_FAILURE
 	}
 
 	result.Summarize()
 	return result, nil
 }
 
-func (s *SnykScanner) getShortVulnerabilities() []shortVulnearibility {
-	var vulns []shortVulnearibility
+func (s *SnykScanner) getShortVulnerabilities() []prototypes.ShortSnykVulnerability {
+	var vulns []prototypes.ShortSnykVulnerability
 	for _, v := range s.Snyk.Vulnerabilities {
 		_, ok := s.ScannedVulnerabilities[v.ID]
 		if ok {
@@ -191,7 +188,7 @@ func (s *SnykScanner) getShortVulnerabilities() []shortVulnearibility {
 		}
 
 		s.ScannedVulnerabilities[v.ID] = struct{}{}
-		vulns = append(vulns, shortVulnearibility{
+		vulns = append(vulns, prototypes.ShortSnykVulnerability{
 			ID:         v.ID,
 			ModuleName: v.ModuleName,
 			Severity:   v.Severity,
@@ -199,4 +196,14 @@ func (s *SnykScanner) getShortVulnerabilities() []shortVulnearibility {
 
 	}
 	return vulns
+}
+
+func (s *SnykScanner) getSummary() string {
+	// build summary
+	stringBuilder := ""
+	if s.Snyk.DependencyCount > 0 {
+		stringBuilder = fmt.Sprintf("Tested %d dependencies for known issues.", s.Snyk.DependencyCount)
+	}
+
+	return stringBuilder
 }

@@ -12,7 +12,7 @@ func GetVersion() {
 	version := Version{
 		Major: 0,
 		Minor: 1,
-		Patch: 3,
+		Patch: 6,
 	}
 
 	fmt.Printf("version: %d.%d.%d\n", version.Major, version.Minor, version.Patch)

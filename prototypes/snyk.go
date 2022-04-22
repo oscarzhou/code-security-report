@@ -219,3 +219,9 @@ type Snyk struct {
 		Version string `json:"version"`
 	} `json:"vulnerabilities"`
 }
+
+type ShortSnykVulnerability struct {
+	ID         string
+	ModuleName string
+	Severity   string
+}
