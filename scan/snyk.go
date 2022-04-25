@@ -227,7 +227,7 @@ func (s *SnykScanner) ClearCache() {
 	s.ScannedVulnerabilities = make(map[string]struct{})
 }
 
-func (s *SnykScanner) Export(outputType string) error {
+func (s *SnykScanner) Export(outputType, filename string) error {
 	result, err := s.Scan()
 	if err != nil {
 		return err
@@ -249,7 +249,16 @@ func (s *SnykScanner) Export(outputType string) error {
 		Total:           result.Total,
 	}
 
-	name := fmt.Sprintf("scan-report-%s-%d.html", snykTmpl.Name, time.Now().Unix())
+	name := filename
+	if filename == "" {
+		name = fmt.Sprintf("scan-report-%s-%d.html", snykTmpl.Name, time.Now().Unix())
+		name = strings.ReplaceAll(name, "/", "-")
+	} else {
+		if !strings.HasSuffix(name, ".html") {
+			name = fmt.Sprintf("%s.html", name)
+		}
+	}
+
 	f, err := os.OpenFile("./output/"+name, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err

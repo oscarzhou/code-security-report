@@ -19,6 +19,7 @@ func main() {
 	flag.StringVar(&config.CompareTo, "compare-to", "", "/path/to/previous-file.json")
 	flag.StringVar(&config.OutputType, "output-type", "", "matrix,table")
 	flag.BoolVar(&config.Export, "export", false, "export the result to a html file")
+	flag.StringVar(&config.ExportFilename, "export-filename", "", "")
 	flag.Parse()
 
 	switch command {
@@ -59,7 +60,7 @@ func main() {
 		}
 
 		if config.Export {
-			err = s.Export(config.OutputType)
+			err = s.Export(config.OutputType, config.ExportFilename)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -140,9 +141,10 @@ func main() {
 }
 
 type GlobalConfig struct {
-	ReportType string
-	Path       string
-	OutputType string
-	CompareTo  string
-	Export     bool
+	ReportType     string
+	Path           string
+	OutputType     string
+	CompareTo      string
+	Export         bool
+	ExportFilename string
 }

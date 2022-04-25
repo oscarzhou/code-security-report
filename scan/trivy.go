@@ -273,7 +273,7 @@ func (s *TrivyScanner) getSummary() string {
 	return stringBuilder
 }
 
-func (s *TrivyScanner) Export(outputType string) error {
+func (s *TrivyScanner) Export(outputType, filename string) error {
 	trivyTmpl := prototypes.TrivyTemplate{
 		Name: s.Trivy.ArtifactName,
 		Type: s.Trivy.ArtifactType,
@@ -324,8 +324,16 @@ func (s *TrivyScanner) Export(outputType string) error {
 	}
 	trivyTmpl.Results = results
 
-	name := fmt.Sprintf("scan-report-%s-%d.html", trivyTmpl.Name, time.Now().Unix())
-	name = strings.ReplaceAll(name, "/", "-")
+	name := filename
+	if filename == "" {
+		name = fmt.Sprintf("scan-report-%s-%d.html", trivyTmpl.Name, time.Now().Unix())
+		name = strings.ReplaceAll(name, "/", "-")
+	} else {
+		if !strings.HasSuffix(name, ".html") {
+			name = fmt.Sprintf("%s.html", name)
+		}
+	}
+
 	f, err := os.OpenFile("./output/"+name, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
