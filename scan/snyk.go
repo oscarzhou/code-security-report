@@ -237,7 +237,7 @@ func (s *SnykScanner) Export(outputType, filename string) error {
 
 	vulns := s.getShortVulnerabilities()
 
-	snykTmpl := prototypes.SnykTemplate{
+	snykTmpl := prototypes.SnykSummaryTemplate{
 		Name:            s.Snyk.ProjectName,
 		Languages:       result.Languages,
 		Vulnerabilities: vulns,
@@ -282,5 +282,141 @@ func (s *SnykScanner) Export(outputType, filename string) error {
 
 	}
 
+	return nil
+}
+
+func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) error {
+	var snykTmpl prototypes.SnykDiffTemplate
+	// get base result
+	baseResult, err := base.Scan()
+	if err != nil {
+		return err
+	}
+
+	// get short vulnerabilities of base scanner
+	compared, ok := base.(*SnykScanner)
+	if !ok {
+		return errors.New("assert Snyk error")
+	}
+
+	compared.ClearCache()
+	baseVulns := compared.getShortVulnerabilities()
+
+	snykTmpl.BaseSummary = prototypes.SnykSummaryTemplate{
+		Name:            compared.Snyk.ProjectName,
+		Languages:       baseResult.Languages,
+		Vulnerabilities: baseVulns,
+		Critical:        baseResult.Critical,
+		High:            baseResult.High,
+		Medium:          baseResult.Medium,
+		Low:             baseResult.Low,
+		Unknown:         baseResult.Unknown,
+		Total:           baseResult.Total,
+	}
+
+	// get short vulnerabilities of current scanner
+	vulns := s.getShortVulnerabilities()
+
+	fixedSummary := prototypes.SnykSummaryTemplate{}
+	// scan the fixed vulnerabilities
+	for _, baseVuln := range baseVulns {
+		matched := false
+		for _, currentVuln := range vulns {
+			if baseVuln.ID == currentVuln.ID {
+				matched = true
+				break
+			}
+		}
+
+		if !matched {
+			fixedSummary.Vulnerabilities = append(fixedSummary.Vulnerabilities, baseVuln)
+			if baseVuln.Severity == "critical" {
+				fixedSummary.Critical++
+				fixedSummary.Total++
+			} else if baseVuln.Severity == "high" {
+				fixedSummary.High++
+				fixedSummary.Total++
+			} else if baseVuln.Severity == "medium" {
+				fixedSummary.Medium++
+				fixedSummary.Total++
+			} else if baseVuln.Severity == "low" {
+				fixedSummary.Low++
+				fixedSummary.Total++
+			} else if baseVuln.Severity == "unknown" {
+				fixedSummary.Unknown++
+				fixedSummary.Total++
+			}
+		}
+	}
+	snykTmpl.FixedSummary = fixedSummary
+
+	newFoundSummary := prototypes.SnykSummaryTemplate{}
+	// scan the new vulnerabilities
+	for _, currentVuln := range vulns {
+		matched := false
+		for _, baseVuln := range baseVulns {
+			if baseVuln.ID == currentVuln.ID {
+				matched = true
+				break
+			}
+		}
+
+		_, exist := compared.ScannedVulnerabilities[currentVuln.ID]
+
+		if !matched && !exist {
+			newFoundSummary.Vulnerabilities = append(newFoundSummary.Vulnerabilities, currentVuln)
+			if currentVuln.Severity == "critical" {
+				newFoundSummary.Critical++
+				newFoundSummary.Total++
+			} else if currentVuln.Severity == "high" {
+				newFoundSummary.High++
+				newFoundSummary.Total++
+			} else if currentVuln.Severity == "medium" {
+				newFoundSummary.Medium++
+				newFoundSummary.Total++
+			} else if currentVuln.Severity == "low" {
+				newFoundSummary.Low++
+				newFoundSummary.Total++
+			} else if currentVuln.Severity == "unknown" {
+				newFoundSummary.Unknown++
+				newFoundSummary.Total++
+			}
+		}
+	}
+
+	snykTmpl.NewFoundSummary = newFoundSummary
+
+	name := filename
+	if filename == "" {
+		name = fmt.Sprintf("scan-report-%s-%d.html", snykTmpl.BaseSummary.Name, time.Now().Unix())
+		name = strings.ReplaceAll(name, "/", "-")
+	} else {
+		if !strings.HasSuffix(name, ".html") {
+			name = fmt.Sprintf("%s.html", name)
+		}
+	}
+
+	f, err := os.OpenFile("./output/"+name, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	funcs := template.FuncMap{"join": strings.Join}
+	switch outputType {
+	case "table":
+		tmpl, err := template.New(templates.SNYK_DIFF_HTML_TABLE).Funcs(funcs).ParseFiles("templates/" + templates.SNYK_DIFF_HTML_TABLE)
+		if err != nil {
+			return err
+		}
+
+		err = tmpl.Execute(f, &snykTmpl)
+		if err != nil {
+			return err
+		}
+
+	case "list":
+
+	}
 	return nil
 }

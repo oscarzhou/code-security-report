@@ -230,7 +230,7 @@ type ShortSnykVulnerability struct {
 	FixedIn    []string
 }
 
-type SnykTemplate struct {
+type SnykSummaryTemplate struct {
 	Name            string
 	Languages       []string
 	Vulnerabilities []ShortSnykVulnerability
@@ -240,4 +240,10 @@ type SnykTemplate struct {
 	Low             int64
 	Unknown         int64
 	Total           int64
+}
+
+type SnykDiffTemplate struct {
+	BaseSummary     SnykSummaryTemplate
+	FixedSummary    SnykSummaryTemplate
+	NewFoundSummary SnykSummaryTemplate
 }

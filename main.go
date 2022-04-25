@@ -123,12 +123,18 @@ func main() {
 
 		}
 
-		result, err := s.Diff(base)
-		if err != nil {
-			log.Fatal(err)
+		if config.Export {
+			err = s.ExportDiff(base, config.OutputType, config.ExportFilename)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			result, err := s.Diff(base)
+			if err != nil {
+				log.Fatal(err)
+			}
+			result.Output(config.OutputType)
 		}
-
-		result.Output(config.OutputType)
 
 	case "ls":
 		cmd.List(config.Path)
