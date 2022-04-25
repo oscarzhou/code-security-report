@@ -137,7 +137,7 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 	for _, baseVuln := range baseVulns {
 		matched := false
 		for _, currentVuln := range vulns {
-			if baseVuln.ID == currentVuln.ID {
+			if baseVuln.CompositeID == currentVuln.CompositeID {
 				matched = true
 				break
 			}
@@ -166,7 +166,7 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 	for _, currentVuln := range vulns {
 		matched := false
 		for _, baseVuln := range baseVulns {
-			if baseVuln.ID == currentVuln.ID {
+			if baseVuln.CompositeID == currentVuln.CompositeID {
 				matched = true
 				break
 			}
@@ -178,7 +178,7 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 		}
 		counts := s.ScannedTargets[currentVuln.Target]
 
-		_, exist := compared.ScannedVulnerabilities[currentVuln.ID]
+		_, exist := compared.ScannedVulnerabilities[currentVuln.CompositeID]
 
 		if !matched && !exist {
 			if currentVuln.Severity == "critical" {
@@ -229,12 +229,15 @@ func (s *TrivyScanner) getShortVulnerabilities() []prototypes.ShortTrivyVulnerab
 
 			s.ScannedVulnerabilities[vulnID] = struct{}{}
 			vulns = append(vulns, prototypes.ShortTrivyVulnerability{
-				ID:               vulnID,
+				ID:               vuln.VulnerabilityID,
+				Target:           res.Target,
+				Type:             res.Type,
 				PkgName:          vuln.PkgName,
 				Severity:         strings.ToLower(vuln.Severity),
 				Title:            vuln.Title,
 				InstalledVersion: vuln.InstalledVersion,
 				FixedVersion:     vuln.FixedVersion,
+				CompositeID:      vulnID,
 			})
 		}
 	}
@@ -273,8 +276,8 @@ func (s *TrivyScanner) getSummary() string {
 	return stringBuilder
 }
 
-func (s *TrivyScanner) Export(outputType, filename string) error {
-	trivyTmpl := prototypes.TrivyTemplate{
+func (s *TrivyScanner) getSummaryTemplate() (prototypes.TrivySummaryTemplate, error) {
+	trivyTmpl := prototypes.TrivySummaryTemplate{
 		Name: s.Trivy.ArtifactName,
 		Type: s.Trivy.ArtifactType,
 	}
@@ -299,18 +302,23 @@ func (s *TrivyScanner) Export(outputType, filename string) error {
 			severity := strings.ToLower(vuln.Severity)
 			if severity == "critical" {
 				result.Critical++
+				result.Total++
 			} else if severity == "high" {
 				result.High++
+				result.Total++
 			} else if severity == "medium" {
 				result.Medium++
+				result.Total++
 			} else if severity == "low" {
 				result.Low++
+				result.Total++
 			} else if severity == "unknown" {
 				result.Unknown++
+				result.Total++
 			}
 
 			vulns = append(vulns, prototypes.ShortTrivyVulnerability{
-				ID:               vulnID,
+				ID:               vuln.VulnerabilityID,
 				PkgName:          vuln.PkgName,
 				Severity:         severity,
 				Title:            vuln.Title,
@@ -323,6 +331,15 @@ func (s *TrivyScanner) Export(outputType, filename string) error {
 		results = append(results, result)
 	}
 	trivyTmpl.Results = results
+	return trivyTmpl, nil
+}
+
+func (s *TrivyScanner) Export(outputType, filename string) error {
+
+	trivyTmpl, err := s.getSummaryTemplate()
+	if err != nil {
+		return err
+	}
 
 	name := filename
 	if filename == "" {
@@ -356,5 +373,165 @@ func (s *TrivyScanner) Export(outputType, filename string) error {
 
 	}
 
+	return nil
+}
+
+func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) error {
+	var trivyTmpl prototypes.TrivyDiffTemplate
+
+	// get short vulnerabilities of base scanner
+	compared, ok := base.(*TrivyScanner)
+	if !ok {
+		return errors.New("assert Trivy error")
+	}
+	baseSummary, err := compared.getSummaryTemplate()
+	if err != nil {
+		return err
+	}
+
+	if baseSummary.Name == "" || baseSummary.Type == "" {
+		baseSummary.Name = s.Trivy.ArtifactName
+		baseSummary.Type = s.Trivy.ArtifactType
+	}
+	trivyTmpl.BaseSummary = baseSummary
+
+	baseVulns := compared.getShortVulnerabilities()
+
+	// get short vulnerabilities of current scanner
+	vulns := s.getShortVulnerabilities()
+
+	fixedSummary := prototypes.TrivySummaryTemplate{}
+
+	// scan the fixed vulnerabilities
+	fixedResults := make(map[string]prototypes.ShortTrivyResult)
+	for _, baseVuln := range baseVulns {
+		matched := false
+		for _, currentVuln := range vulns {
+			if baseVuln.CompositeID == currentVuln.CompositeID {
+				matched = true
+				break
+			}
+		}
+
+		if !matched {
+			result, ok := fixedResults[baseVuln.Target]
+			if ok {
+				result.Vulnerabilities = append(result.Vulnerabilities, baseVuln)
+			} else {
+				result = prototypes.ShortTrivyResult{
+					Target:          baseVuln.Target,
+					Type:            baseVuln.Type,
+					Vulnerabilities: []prototypes.ShortTrivyVulnerability{baseVuln},
+				}
+			}
+
+			if baseVuln.Severity == "critical" {
+				result.Critical++
+				result.Total++
+			} else if baseVuln.Severity == "high" {
+				result.High++
+				result.Total++
+			} else if baseVuln.Severity == "medium" {
+				result.Medium++
+				result.Total++
+			} else if baseVuln.Severity == "low" {
+				result.Low++
+				result.Total++
+			} else if baseVuln.Severity == "unknown" {
+				result.Unknown++
+				result.Total++
+			}
+			fixedResults[baseVuln.Target] = result
+		}
+	}
+
+	for _, result := range fixedResults {
+		fixedSummary.Results = append(fixedSummary.Results, result)
+	}
+	trivyTmpl.FixedSummary = fixedSummary
+
+	newFoundSummary := prototypes.TrivySummaryTemplate{}
+
+	// scan the new vulnerabilities
+	newFoundResults := make(map[string]prototypes.ShortTrivyResult)
+	for _, currentVuln := range vulns {
+		matched := false
+		for _, baseVuln := range baseVulns {
+			if baseVuln.CompositeID == currentVuln.CompositeID {
+				matched = true
+				break
+			}
+		}
+
+		_, exist := compared.ScannedVulnerabilities[currentVuln.CompositeID]
+
+		if !matched && !exist {
+			result, ok := newFoundResults[currentVuln.Target]
+			if ok {
+				result.Vulnerabilities = append(result.Vulnerabilities, currentVuln)
+			} else {
+				result = prototypes.ShortTrivyResult{
+					Target:          currentVuln.Target,
+					Type:            currentVuln.Type,
+					Vulnerabilities: []prototypes.ShortTrivyVulnerability{currentVuln},
+				}
+			}
+
+			if currentVuln.Severity == "critical" {
+				result.Critical++
+				result.Total++
+			} else if currentVuln.Severity == "high" {
+				result.High++
+				result.Total++
+			} else if currentVuln.Severity == "medium" {
+				result.Medium++
+				result.Total++
+			} else if currentVuln.Severity == "low" {
+				result.Low++
+				result.Total++
+			} else if currentVuln.Severity == "unknown" {
+				result.Unknown++
+				result.Total++
+			}
+			newFoundResults[currentVuln.Target] = result
+		}
+	}
+
+	for _, result := range newFoundResults {
+		newFoundSummary.Results = append(newFoundSummary.Results, result)
+	}
+	trivyTmpl.NewFoundSummary = newFoundSummary
+
+	name := filename
+	if filename == "" {
+		name = fmt.Sprintf("scan-report-%s-%d.html", trivyTmpl.BaseSummary.Name, time.Now().Unix())
+		name = strings.ReplaceAll(name, "/", "-")
+	} else {
+		if !strings.HasSuffix(name, ".html") {
+			name = fmt.Sprintf("%s.html", name)
+		}
+	}
+
+	f, err := os.OpenFile("./output/"+name, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	switch outputType {
+	case "table":
+		tmpl, err := template.ParseFiles("templates/" + templates.TRIVY_DIFF_HTML_TABLE)
+		if err != nil {
+			return err
+		}
+
+		err = tmpl.Execute(f, &trivyTmpl)
+		if err != nil {
+			return err
+		}
+
+	case "list":
+
+	}
 	return nil
 }

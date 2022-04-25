@@ -302,7 +302,7 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 	compared.ClearCache()
 	baseVulns := compared.getShortVulnerabilities()
 
-	snykTmpl.BaseSummary = prototypes.SnykSummaryTemplate{
+	baseSummary := prototypes.SnykSummaryTemplate{
 		Name:            compared.Snyk.ProjectName,
 		Languages:       baseResult.Languages,
 		Vulnerabilities: baseVulns,
@@ -313,6 +313,19 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 		Unknown:         baseResult.Unknown,
 		Total:           baseResult.Total,
 	}
+
+	if baseSummary.Name == "" || len(baseSummary.Languages) == 0 {
+		baseSummary.Name = s.Snyk.ProjectName
+		langs := make(map[string]struct{})
+		for _, vuln := range s.Snyk.Vulnerabilities {
+			langs[vuln.Language] = struct{}{}
+		}
+
+		for lang := range langs {
+			baseSummary.Languages = append(baseSummary.Languages, lang)
+		}
+	}
+	snykTmpl.BaseSummary = baseSummary
 
 	// get short vulnerabilities of current scanner
 	vulns := s.getShortVulnerabilities()

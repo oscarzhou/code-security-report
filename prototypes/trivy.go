@@ -89,11 +89,13 @@ type Trivy struct {
 type ShortTrivyVulnerability struct {
 	ID               string
 	Target           string
+	Type             string
 	PkgName          string
 	Severity         string
 	Title            string
 	InstalledVersion string
 	FixedVersion     string
+	CompositeID      string `json:"-"`
 }
 
 type ShortTrivyResult struct {
@@ -108,8 +110,14 @@ type ShortTrivyResult struct {
 	Total           int64
 }
 
-type TrivyTemplate struct {
+type TrivySummaryTemplate struct {
 	Name    string
 	Type    string
 	Results []ShortTrivyResult
+}
+
+type TrivyDiffTemplate struct {
+	BaseSummary     TrivySummaryTemplate
+	FixedSummary    TrivySummaryTemplate
+	NewFoundSummary TrivySummaryTemplate
 }
