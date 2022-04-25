@@ -232,6 +232,7 @@ type ShortSnykVulnerability struct {
 
 type SnykTemplate struct {
 	Name            string
+	Languages       []string
 	Vulnerabilities []ShortSnykVulnerability
 	Critical        int64
 	High            int64

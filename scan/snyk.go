@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/oscarzhou/scan-report/prototypes"
+	"github.com/oscarzhou/scan-report/templates"
 )
 
 type SnykScanner struct {
@@ -35,6 +37,7 @@ func NewSnykScanner(path string) (*SnykScanner, error) {
 
 func (s *SnykScanner) Scan() (Result, error) {
 	var result Result
+	langs := make(map[string]struct{})
 
 	for _, vuln := range s.Snyk.Vulnerabilities {
 		_, ok := s.ScannedVulnerabilities[vuln.ID]
@@ -43,6 +46,8 @@ func (s *SnykScanner) Scan() (Result, error) {
 		}
 
 		s.ScannedVulnerabilities[vuln.ID] = struct{}{}
+
+		langs[vuln.Language] = struct{}{}
 
 		if vuln.Severity == "critical" {
 			result.Critical++
@@ -76,6 +81,10 @@ func (s *SnykScanner) Scan() (Result, error) {
 		result.Status = RESULT_FAILURE
 	} else {
 		result.Status = RESULT_SUCCESS
+	}
+
+	for lang := range langs {
+		result.Languages = append(result.Languages, lang)
 	}
 
 	result.Summary = s.getSummary()
@@ -230,6 +239,7 @@ func (s *SnykScanner) Export(outputType string) error {
 
 	snykTmpl := prototypes.SnykTemplate{
 		Name:            s.Snyk.ProjectName,
+		Languages:       result.Languages,
 		Vulnerabilities: vulns,
 		Critical:        result.Critical,
 		High:            result.High,
@@ -246,14 +256,18 @@ func (s *SnykScanner) Export(outputType string) error {
 	}
 	defer f.Close()
 
+	funcs := template.FuncMap{"join": strings.Join}
 	switch outputType {
 	case "table":
-		tmpl, err := template.ParseFiles("templates/html-table.go.tmpl")
+		tmpl, err := template.New(templates.SNYK_SUMMARY_HTML_TABLE).Funcs(funcs).ParseFiles("templates/" + templates.SNYK_SUMMARY_HTML_TABLE)
 		if err != nil {
 			return err
 		}
 
-		tmpl.Execute(f, &snykTmpl)
+		err = tmpl.Execute(f, &snykTmpl)
+		if err != nil {
+			return err
+		}
 
 	case "list":
 
