@@ -3,8 +3,30 @@
 <html>
 
 <head>
+    <title>{{ .Name }} | {{ join .Languages ", " }}</title>
 	<style>
-    	table: {border: 1px solid black}
+        .summary {
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+        }
+
+        .summary td, .summary th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        }
+
+        .summary tr:nth-child(even){background-color: #f2f2f2;}
+
+        .summary tr:hover {background-color: #ddd;}
+
+        .summary th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        background-color: #04AA6D;
+        color: white;
+        }
     </style>
 </head>
 <body>
@@ -14,10 +36,15 @@ Project: {{ .Name }}
 
 <br/>
 
+Language: {{ join .Languages ", " }}
+
+<br/>
+
 Total: {{ .Total }} (UNKNOWN: {{ .Unknown }}, LOW: {{ .Low }}, MEDIUM: {{ .Medium }}, HIGH: {{ .High }}, CRITICAL: {{ .Critical }})
 
+<br/>
 
-<table>
+<table class="summary">
 	<tr>
       <th>MODULE NAME</th>
       <th>VULNERABILITY ID</th>
