@@ -87,8 +87,29 @@ type Trivy struct {
 }
 
 type ShortTrivyVulnerability struct {
-	ID       string
-	Target   string
-	PkgName  string
-	Severity string
+	ID               string
+	Target           string
+	PkgName          string
+	Severity         string
+	Title            string
+	InstalledVersion string
+	FixedVersion     string
+}
+
+type ShortTrivyResult struct {
+	Target          string
+	Type            string
+	Vulnerabilities []ShortTrivyVulnerability
+	Critical        int64
+	High            int64
+	Medium          int64
+	Low             int64
+	Unknown         int64
+	Total           int64
+}
+
+type TrivyTemplate struct {
+	Name    string
+	Type    string
+	Results []ShortTrivyResult
 }

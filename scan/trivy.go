@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html/template"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/oscarzhou/scan-report/prototypes"
+	"github.com/oscarzhou/scan-report/templates"
 )
 
 type TrivyScanner struct {
@@ -226,10 +229,12 @@ func (s *TrivyScanner) getShortVulnerabilities() []prototypes.ShortTrivyVulnerab
 
 			s.ScannedVulnerabilities[vulnID] = struct{}{}
 			vulns = append(vulns, prototypes.ShortTrivyVulnerability{
-				ID:       vulnID,
-				Target:   res.Target,
-				PkgName:  vuln.PkgName,
-				Severity: strings.ToLower(vuln.Severity),
+				ID:               vulnID,
+				PkgName:          vuln.PkgName,
+				Severity:         strings.ToLower(vuln.Severity),
+				Title:            vuln.Title,
+				InstalledVersion: vuln.InstalledVersion,
+				FixedVersion:     vuln.FixedVersion,
 			})
 		}
 	}
@@ -269,5 +274,79 @@ func (s *TrivyScanner) getSummary() string {
 }
 
 func (s *TrivyScanner) Export(outputType string) error {
+	trivyTmpl := prototypes.TrivyTemplate{
+		Name: s.Trivy.ArtifactName,
+		Type: s.Trivy.ArtifactType,
+	}
+
+	var results []prototypes.ShortTrivyResult
+
+	for _, res := range s.Trivy.Results {
+		var result prototypes.ShortTrivyResult
+		result.Target = res.Target
+		result.Type = res.Type
+		var vulns []prototypes.ShortTrivyVulnerability
+		for _, vuln := range res.Vulnerabilities {
+			vulnID := getVulnerabilityID(res.Target, vuln.VulnerabilityID)
+
+			_, ok := s.ScannedVulnerabilities[vulnID]
+			if ok {
+				continue
+			}
+
+			s.ScannedVulnerabilities[vulnID] = struct{}{}
+
+			severity := strings.ToLower(vuln.Severity)
+			if severity == "critical" {
+				result.Critical++
+			} else if severity == "high" {
+				result.High++
+			} else if severity == "medium" {
+				result.Medium++
+			} else if severity == "low" {
+				result.Low++
+			} else if severity == "unknown" {
+				result.Unknown++
+			}
+
+			vulns = append(vulns, prototypes.ShortTrivyVulnerability{
+				ID:               vulnID,
+				PkgName:          vuln.PkgName,
+				Severity:         severity,
+				Title:            vuln.Title,
+				InstalledVersion: vuln.InstalledVersion,
+				FixedVersion:     vuln.FixedVersion,
+			})
+		}
+
+		result.Vulnerabilities = vulns
+		results = append(results, result)
+	}
+	trivyTmpl.Results = results
+
+	name := fmt.Sprintf("scan-report-%s-%d.html", trivyTmpl.Name, time.Now().Unix())
+	name = strings.ReplaceAll(name, "/", "-")
+	f, err := os.OpenFile("./output/"+name, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	switch outputType {
+	case "table":
+		tmpl, err := template.ParseFiles("templates/" + templates.TRIVY_SUMMARY_HTML_TABLE)
+		if err != nil {
+			return err
+		}
+
+		err = tmpl.Execute(f, &trivyTmpl)
+		if err != nil {
+			return err
+		}
+
+	case "list":
+
+	}
+
 	return nil
 }

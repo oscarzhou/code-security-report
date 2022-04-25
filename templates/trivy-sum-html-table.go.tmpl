@@ -3,7 +3,7 @@
 <html>
 
 <head>
-    <title>{{ .Name }} | {{ join .Languages ", " }}</title>
+    <title>{{ .Name }} | {{ .Type }}</title>
 	<style>
         .summary {
         font-family: Arial, Helvetica, sans-serif;
@@ -32,10 +32,13 @@
 <body>
 
 
-<h2> Project: {{ .Name }}, Language: {{ join .Languages ", " }}  </h2>
+<h2> Project: {{ .Name }}, Type: {{ .Type }} </h2>
 
 <br/>
 
+{{ range .Results }}
+
+{{ .Target }} ({{ .Type }})
 Total: {{ .Total }} (UNKNOWN: {{ .Unknown }}, LOW: {{ .Low }}, MEDIUM: {{ .Medium }}, HIGH: {{ .High }}, CRITICAL: {{ .Critical }})
 
 <br/>
@@ -51,15 +54,19 @@ Total: {{ .Total }} (UNKNOWN: {{ .Unknown }}, LOW: {{ .Low }}, MEDIUM: {{ .Mediu
     </tr>
     {{ range .Vulnerabilities }}
 	<tr>
-    	<td>{{ .ModuleName }}</td>
+    	<td>{{ .PkgName }}</td>
         <td>{{ .ID }}</td>
         <td>{{ .Severity }}</td>
-        <td>{{ .Version }}</td>
-        <td>{{ join .FixedIn ", " }}</td>
+        <td>{{ .InstalledVersion }}</td>
+        <td>{{ .FixedVersion }}</td>
         <td>{{ .Title }}</td>
     </tr>
     {{ end }}
 </table>
+
+<br/>
+<br/>
+{{ end }}
 
 </body>
 </html>
