@@ -259,7 +259,7 @@ func (s *SnykScanner) Export(outputType, filename string) error {
 		}
 	}
 
-	f, err := os.OpenFile("./output/"+name, os.O_RDWR|os.O_CREATE, 0644)
+	f, err := os.OpenFile("./"+name, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
@@ -409,7 +409,7 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 		}
 	}
 
-	f, err := os.OpenFile("./output/"+name, os.O_RDWR|os.O_CREATE, 0644)
+	f, err := os.OpenFile("./"+name, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
