@@ -23,6 +23,7 @@ type Result struct {
 	FixableMedium   int64
 	FixableLow      int64
 	FixableUnknown  int64
+	Languages       []string
 	Summary         string `json:"summary"`
 	Status          string `json:"status"`
 }

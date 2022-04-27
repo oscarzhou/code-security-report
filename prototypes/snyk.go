@@ -224,4 +224,26 @@ type ShortSnykVulnerability struct {
 	ID         string
 	ModuleName string
 	Severity   string
+	CvssScore  float64
+	Title      string
+	Version    string
+	FixedIn    []string
+}
+
+type SnykSummaryTemplate struct {
+	Name            string
+	Languages       []string
+	Vulnerabilities []ShortSnykVulnerability
+	Critical        int64
+	High            int64
+	Medium          int64
+	Low             int64
+	Unknown         int64
+	Total           int64
+}
+
+type SnykDiffTemplate struct {
+	BaseSummary     SnykSummaryTemplate
+	FixedSummary    SnykSummaryTemplate
+	NewFoundSummary SnykSummaryTemplate
 }

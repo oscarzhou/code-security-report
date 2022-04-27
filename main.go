@@ -17,7 +17,9 @@ func main() {
 	flag.StringVar(&config.ReportType, "report-type", "", "snyk,trivy,gosec")
 	flag.StringVar(&config.Path, "path", "", "/path/to/current-file.json")
 	flag.StringVar(&config.CompareTo, "compare-to", "", "/path/to/previous-file.json")
-	flag.StringVar(&config.OutputType, "output-type", "", "matrix")
+	flag.StringVar(&config.OutputType, "output-type", "", "matrix,table")
+	flag.BoolVar(&config.Export, "export", false, "export the result to a html file")
+	flag.StringVar(&config.ExportFilename, "export-filename", "", "")
 	flag.Parse()
 
 	switch command {
@@ -57,12 +59,19 @@ func main() {
 			log.Fatal(err)
 		}
 
-		result, err := s.Scan()
-		if err != nil {
-			log.Fatal(err)
-		}
+		if config.Export {
+			err = s.Export(config.OutputType, config.ExportFilename)
+			if err != nil {
+				log.Fatal(err)
+			}
 
-		result.Output(config.OutputType)
+		} else {
+			result, err := s.Scan()
+			if err != nil {
+				log.Fatal(err)
+			}
+			result.Output(config.OutputType)
+		}
 
 	case "diff":
 		if config.ReportType == "" {
@@ -114,12 +123,18 @@ func main() {
 
 		}
 
-		result, err := s.Diff(base)
-		if err != nil {
-			log.Fatal(err)
+		if config.Export {
+			err = s.ExportDiff(base, config.OutputType, config.ExportFilename)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			result, err := s.Diff(base)
+			if err != nil {
+				log.Fatal(err)
+			}
+			result.Output(config.OutputType)
 		}
-
-		result.Output(config.OutputType)
 
 	case "ls":
 		cmd.List(config.Path)
@@ -132,8 +147,10 @@ func main() {
 }
 
 type GlobalConfig struct {
-	ReportType string
-	Path       string
-	OutputType string
-	CompareTo  string
+	ReportType     string
+	Path           string
+	OutputType     string
+	CompareTo      string
+	Export         bool
+	ExportFilename string
 }
