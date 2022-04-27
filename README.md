@@ -37,6 +37,35 @@ run: |
     echo "::set-output name=go_diff_result::${result}"
 ```
 
+### 3. Export summary result 
+
+```
+- name: Export scan result to html file 
+run: | 
+    $(docker run --rm -v ${{ github.workspace }}:/data oscarzhou/scan-report:0.1.8 summary -report-type=snyk -path="/data/snyk.json" -output-type=table -export -export-filename="/data/go-result")
+
+- name: Upload go result html file
+uses: actions/upload-artifact@v3
+with:
+    name: html-go-result-${{github.run_id}}
+    path: go-result.html
+```
+
+### 4. Export diff result
+
+```
+- name: Export scan result to html file 
+run: | 
+    $(docker run --rm -v ${{ github.workspace }}:/data oscarzhou/scan-report:0.1.8 diff -report-type=snyk -path="/data/go-snyk-feature.json" -compare-to="/data/go-snyk-develop.json" -output-type=table -export -export-filename="/data/go-result")
+
+- name: Upload go result html file
+uses: actions/upload-artifact@v3
+with:
+    name: html-go-result-compare-to-develop-${{github.run_id}}
+    path: go-result.html
+
+```
+
 ## Examples in CLI
 
 ### 1. Get summary of the report
@@ -128,12 +157,23 @@ run: |
   }
 ]
 ```
-### 3. Debug with ls command
+
+### 3. Export the summary report
+
+
+`./scanreport summary -report-type=snyk -path="./fixtures/snyk-feature.json" -export -output-type=table -export-filename="snyk-summary"`
+
+
+### 4. Export the diff report
+
+`./scanreport diff -report-type=snyk -path="./fixtures/snyk-feature.json" -compare-to="./fixtures/snyk-develop.json" -output-type=table -export`
+
+### 5. Debug with ls command
 
 `docker run --rm -v $PWD/fixtures:/data oscarzhou/scan-report:latest ls -path=/data`
 
 
-### 4. Check version
+### 6. Check version
 
 `./scanreport version` 
 
@@ -142,6 +182,11 @@ run: |
 ### 1. Run with docker container
 
 `docker run --rm -v $PWD/fixtures:/data oscarzhou/scan-report:<version> summary -report-type=snyk -path="/data/snyk.json"`
+
+### 2. Export with docker container
+
+`docker run --rm -v $PWD/fixtures:/data oscarzhou/scan-report:<version> diff -report-type=snyk -path="./data/snyk-feature.json" -compare-to="./data/snyk-develop.json" -output-type=table -export -export-filename="./data/snyk-diff"`
+
 
 ## Command detail
 
