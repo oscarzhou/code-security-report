@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oscarzhou/scan-report/prototypes"
+	"github.com/oscarzhou/scan-report/models"
 	"github.com/oscarzhou/scan-report/templates"
 )
 
 type TrivyScanner struct {
-	Trivy                  prototypes.Trivy
+	Trivy                  models.Trivy
 	ScannedVulnerabilities map[string]struct{}
 	ScannedTargets         map[string][5]int64
 }
@@ -215,8 +215,8 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 	return result, nil
 }
 
-func (s *TrivyScanner) getShortVulnerabilities() []prototypes.ShortTrivyVulnerability {
-	var vulns []prototypes.ShortTrivyVulnerability
+func (s *TrivyScanner) getShortVulnerabilities() []models.ShortTrivyVulnerability {
+	var vulns []models.ShortTrivyVulnerability
 
 	for _, res := range s.Trivy.Results {
 		for _, vuln := range res.Vulnerabilities {
@@ -228,7 +228,7 @@ func (s *TrivyScanner) getShortVulnerabilities() []prototypes.ShortTrivyVulnerab
 			}
 
 			s.ScannedVulnerabilities[vulnID] = struct{}{}
-			vulns = append(vulns, prototypes.ShortTrivyVulnerability{
+			vulns = append(vulns, models.ShortTrivyVulnerability{
 				ID:               vuln.VulnerabilityID,
 				Target:           res.Target,
 				Type:             res.Type,
@@ -276,19 +276,19 @@ func (s *TrivyScanner) getSummary() string {
 	return stringBuilder
 }
 
-func (s *TrivyScanner) getSummaryTemplate() (prototypes.TrivySummaryTemplate, error) {
-	trivyTmpl := prototypes.TrivySummaryTemplate{
+func (s *TrivyScanner) getSummaryTemplate() (models.TrivySummaryTemplate, error) {
+	trivyTmpl := models.TrivySummaryTemplate{
 		Name: s.Trivy.ArtifactName,
 		Type: s.Trivy.ArtifactType,
 	}
 
-	var results []prototypes.ShortTrivyResult
+	var results []models.ShortTrivyResult
 
 	for _, res := range s.Trivy.Results {
-		var result prototypes.ShortTrivyResult
+		var result models.ShortTrivyResult
 		result.Target = res.Target
 		result.Type = res.Type
-		var vulns []prototypes.ShortTrivyVulnerability
+		var vulns []models.ShortTrivyVulnerability
 		for _, vuln := range res.Vulnerabilities {
 			vulnID := getVulnerabilityID(res.Target, vuln.VulnerabilityID)
 
@@ -317,7 +317,7 @@ func (s *TrivyScanner) getSummaryTemplate() (prototypes.TrivySummaryTemplate, er
 				result.Total++
 			}
 
-			vulns = append(vulns, prototypes.ShortTrivyVulnerability{
+			vulns = append(vulns, models.ShortTrivyVulnerability{
 				ID:               vuln.VulnerabilityID,
 				PkgName:          vuln.PkgName,
 				Severity:         severity,
@@ -377,7 +377,7 @@ func (s *TrivyScanner) Export(outputType, filename string) error {
 }
 
 func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) error {
-	var trivyTmpl prototypes.TrivyDiffTemplate
+	var trivyTmpl models.TrivyDiffTemplate
 
 	// get short vulnerabilities of base scanner
 	compared, ok := base.(*TrivyScanner)
@@ -400,10 +400,10 @@ func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) err
 	// get short vulnerabilities of current scanner
 	vulns := s.getShortVulnerabilities()
 
-	fixedSummary := prototypes.TrivySummaryTemplate{}
+	fixedSummary := models.TrivySummaryTemplate{}
 
 	// scan the fixed vulnerabilities
-	fixedResults := make(map[string]prototypes.ShortTrivyResult)
+	fixedResults := make(map[string]models.ShortTrivyResult)
 	for _, baseVuln := range baseVulns {
 		matched := false
 		for _, currentVuln := range vulns {
@@ -418,10 +418,10 @@ func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) err
 			if ok {
 				result.Vulnerabilities = append(result.Vulnerabilities, baseVuln)
 			} else {
-				result = prototypes.ShortTrivyResult{
+				result = models.ShortTrivyResult{
 					Target:          baseVuln.Target,
 					Type:            baseVuln.Type,
-					Vulnerabilities: []prototypes.ShortTrivyVulnerability{baseVuln},
+					Vulnerabilities: []models.ShortTrivyVulnerability{baseVuln},
 				}
 			}
 
@@ -450,10 +450,10 @@ func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) err
 	}
 	trivyTmpl.FixedSummary = fixedSummary
 
-	newFoundSummary := prototypes.TrivySummaryTemplate{}
+	newFoundSummary := models.TrivySummaryTemplate{}
 
 	// scan the new vulnerabilities
-	newFoundResults := make(map[string]prototypes.ShortTrivyResult)
+	newFoundResults := make(map[string]models.ShortTrivyResult)
 	for _, currentVuln := range vulns {
 		matched := false
 		for _, baseVuln := range baseVulns {
@@ -470,10 +470,10 @@ func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) err
 			if ok {
 				result.Vulnerabilities = append(result.Vulnerabilities, currentVuln)
 			} else {
-				result = prototypes.ShortTrivyResult{
+				result = models.ShortTrivyResult{
 					Target:          currentVuln.Target,
 					Type:            currentVuln.Type,
-					Vulnerabilities: []prototypes.ShortTrivyVulnerability{currentVuln},
+					Vulnerabilities: []models.ShortTrivyVulnerability{currentVuln},
 				}
 			}
 

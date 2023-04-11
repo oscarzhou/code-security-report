@@ -9,12 +9,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oscarzhou/scan-report/prototypes"
+	"github.com/oscarzhou/scan-report/models"
 	"github.com/oscarzhou/scan-report/templates"
 )
 
+var (
+	ErrNullFile = errors.New("empty file")
+)
+
 type SnykScanner struct {
-	Snyk                   prototypes.Snyk
+	Snyk                   models.Snyk
 	ScannedVulnerabilities map[string]struct{}
 }
 
@@ -30,6 +34,9 @@ func NewSnykScanner(path string) (*SnykScanner, error) {
 
 	err = json.Unmarshal(dat, &snyk.Snyk)
 	if err != nil {
+		if string(dat) == "null" {
+			return snyk, ErrNullFile
+		}
 		return snyk, err
 	}
 	return snyk, nil
@@ -190,8 +197,8 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 	return result, nil
 }
 
-func (s *SnykScanner) getShortVulnerabilities() []prototypes.ShortSnykVulnerability {
-	var vulns []prototypes.ShortSnykVulnerability
+func (s *SnykScanner) getShortVulnerabilities() []models.ShortSnykVulnerability {
+	var vulns []models.ShortSnykVulnerability
 	for _, v := range s.Snyk.Vulnerabilities {
 		_, ok := s.ScannedVulnerabilities[v.ID]
 		if ok {
@@ -199,7 +206,7 @@ func (s *SnykScanner) getShortVulnerabilities() []prototypes.ShortSnykVulnerabil
 		}
 
 		s.ScannedVulnerabilities[v.ID] = struct{}{}
-		vulns = append(vulns, prototypes.ShortSnykVulnerability{
+		vulns = append(vulns, models.ShortSnykVulnerability{
 			ID:         v.ID,
 			ModuleName: v.ModuleName,
 			Severity:   v.Severity,
@@ -237,7 +244,7 @@ func (s *SnykScanner) Export(outputType, filename string) error {
 
 	vulns := s.getShortVulnerabilities()
 
-	snykTmpl := prototypes.SnykSummaryTemplate{
+	snykTmpl := models.SnykSummaryTemplate{
 		Name:            s.Snyk.ProjectName,
 		Languages:       result.Languages,
 		Vulnerabilities: vulns,
@@ -286,7 +293,7 @@ func (s *SnykScanner) Export(outputType, filename string) error {
 }
 
 func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) error {
-	var snykTmpl prototypes.SnykDiffTemplate
+	var snykTmpl models.SnykDiffTemplate
 	// get base result
 	baseResult, err := base.Scan()
 	if err != nil {
@@ -302,7 +309,7 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 	compared.ClearCache()
 	baseVulns := compared.getShortVulnerabilities()
 
-	baseSummary := prototypes.SnykSummaryTemplate{
+	baseSummary := models.SnykSummaryTemplate{
 		Name:            compared.Snyk.ProjectName,
 		Languages:       baseResult.Languages,
 		Vulnerabilities: baseVulns,
@@ -330,7 +337,7 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 	// get short vulnerabilities of current scanner
 	vulns := s.getShortVulnerabilities()
 
-	fixedSummary := prototypes.SnykSummaryTemplate{}
+	fixedSummary := models.SnykSummaryTemplate{}
 	// scan the fixed vulnerabilities
 	for _, baseVuln := range baseVulns {
 		matched := false
@@ -363,7 +370,7 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 	}
 	snykTmpl.FixedSummary = fixedSummary
 
-	newFoundSummary := prototypes.SnykSummaryTemplate{}
+	newFoundSummary := models.SnykSummaryTemplate{}
 	// scan the new vulnerabilities
 	for _, currentVuln := range vulns {
 		matched := false

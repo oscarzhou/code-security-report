@@ -1,4 +1,4 @@
-package prototypes
+package models
 
 type Snyk struct {
 	DependencyCount   int64  `json:"dependencyCount"`
