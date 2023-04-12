@@ -3,6 +3,8 @@ package scan
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/oscarzhou/scan-report/models"
 )
 
 const (
@@ -11,25 +13,17 @@ const (
 )
 
 type Result struct {
-	ScannedObjects  int64 `json:",omitempty;scannedObjects"`
-	Critical        int64 `json:"critical"`
-	High            int64 `json:"high"`
-	Medium          int64 `json:"medium"`
-	Low             int64 `json:"low"`
-	Unknown         int64 `json:"unknown"`
-	Total           int64 `json:"total"`
-	FixableCritical int64
-	FixableHigh     int64
-	FixableMedium   int64
-	FixableLow      int64
-	FixableUnknown  int64
-	Languages       []string
-	Summary         string `json:"summary"`
-	Status          string `json:"status"`
+	ScannedObjects      int64 `json:",omitempty;scannedObjects"`
+	SeverityStat        models.SeverityStat
+	Total               int64 `json:"total"`
+	FixableSeverityStat models.SeverityStat
+	Languages           []string
+	Summary             string `json:"summary"`
+	Status              string `json:"status"`
 }
 
 func (r *Result) GetTotal() {
-	r.Total = r.Critical + r.High + r.Medium + r.Low + r.Unknown
+	r.Total = r.SeverityStat.Total()
 }
 
 func (r *Result) SetSummary() {
@@ -37,27 +31,7 @@ func (r *Result) SetSummary() {
 }
 
 func GetCommonSummary(r *Result) string {
-	// build summary
-	stringBuilder := fmt.Sprintf("%s Total:", r.Summary)
-	if r.Critical > 0 {
-		stringBuilder = fmt.Sprintf("%s Critical:%d", stringBuilder, r.Critical)
-	}
-	if r.High > 0 {
-		stringBuilder = fmt.Sprintf("%s High:%d", stringBuilder, r.High)
-	}
-	if r.Medium > 0 {
-		stringBuilder = fmt.Sprintf("%s Medium:%d", stringBuilder, r.Medium)
-	}
-	if r.Low > 0 {
-		stringBuilder = fmt.Sprintf("%s Low:%d", stringBuilder, r.Low)
-	}
-	if r.Unknown > 0 {
-		stringBuilder = fmt.Sprintf("%s Unknown:%d", stringBuilder, r.Unknown)
-	}
-	if r.Total == 0 {
-		stringBuilder = fmt.Sprintf("%s Nothing found", stringBuilder)
-	}
-	return stringBuilder
+	return r.SeverityStat.Summarize()
 }
 
 func (r *Result) Output(outputType string) {

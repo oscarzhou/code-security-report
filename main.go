@@ -104,7 +104,7 @@ func main() {
 			}
 
 			base, err = scan.NewSnykScanner(config.CompareTo)
-			if err != nil {
+			if err != nil && err != scan.ErrNullFile {
 				log.Fatal(err)
 			}
 
