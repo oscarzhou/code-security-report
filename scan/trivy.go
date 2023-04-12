@@ -53,37 +53,19 @@ func (s *TrivyScanner) Scan() (Result, error) {
 			s.ScannedVulnerabilities[vulnID] = struct{}{}
 
 			severity := strings.ToLower(vuln.Severity)
-			if severity == "critical" {
-				result.Critical++
-				counts[0]++
-			} else if severity == "high" {
-				result.High++
-				counts[1]++
-			} else if severity == "medium" {
-				result.Medium++
-				counts[2]++
-			} else if severity == "low" {
-				result.Low++
-				counts[3]++
-			} else if severity == "unknown" {
-				result.Unknown++
-				counts[4]++
-			}
 
+			result.SeverityStat.Count(severity)
 			if vuln.FixedVersion != "" {
-				if severity == "critical" {
-					result.FixableCritical++
-				} else if severity == "high" {
-					result.FixableHigh++
-				} else if severity == "medium" {
-					result.FixableMedium++
-				} else if severity == "low" {
-					result.FixableLow++
-				} else if severity == "unknown" {
-					result.FixableUnknown++
-				}
+				result.FixableSeverityStat.Count(severity)
+
 			}
 		}
+
+		counts[0] = result.SeverityStat.Critical
+		counts[1] = result.SeverityStat.High
+		counts[2] = result.SeverityStat.Medium
+		counts[3] = result.SeverityStat.Low
+		counts[4] = result.SeverityStat.Unknown
 
 		s.ScannedTargets[res.Target] = counts
 	}
@@ -144,17 +126,8 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 		}
 
 		if !matched {
-			if baseVuln.Severity == "critical" {
-				fixed.Critical++
-			} else if baseVuln.Severity == "high" {
-				fixed.High++
-			} else if baseVuln.Severity == "medium" {
-				fixed.Medium++
-			} else if baseVuln.Severity == "low" {
-				fixed.Low++
-			} else if baseVuln.Severity == "unknown" {
-				fixed.Unknown++
-			}
+			fixed.SeverityStat.Count(baseVuln.Severity)
+
 		}
 	}
 	fixed.GetTotal()
@@ -181,25 +154,17 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 		_, exist := compared.ScannedVulnerabilities[currentVuln.CompositeID]
 
 		if !matched && !exist {
-			if currentVuln.Severity == "critical" {
-				newFound.Critical++
-				counts[0]++
-			} else if currentVuln.Severity == "high" {
-				newFound.High++
-				counts[1]++
-			} else if currentVuln.Severity == "medium" {
-				newFound.Medium++
-				counts[2]++
-			} else if currentVuln.Severity == "low" {
-				newFound.Low++
-				counts[3]++
-			} else if currentVuln.Severity == "unknown" {
-				newFound.Unknown++
-				counts[4]++
-			}
+			newFound.SeverityStat.Count(currentVuln.Severity)
+
 		}
+		counts[0] = newFound.SeverityStat.Critical
+		counts[1] = newFound.SeverityStat.High
+		counts[2] = newFound.SeverityStat.Medium
+		counts[3] = newFound.SeverityStat.Low
+		counts[4] = newFound.SeverityStat.Unknown
 		s.ScannedTargets[currentVuln.Target] = counts
 	}
+
 	newFound.GetTotal()
 	newFound.Summary = s.getSummary()
 	newFound.SetSummary()
@@ -300,22 +265,7 @@ func (s *TrivyScanner) getSummaryTemplate() (models.TrivySummaryTemplate, error)
 			s.ScannedVulnerabilities[vulnID] = struct{}{}
 
 			severity := strings.ToLower(vuln.Severity)
-			if severity == "critical" {
-				result.Critical++
-				result.Total++
-			} else if severity == "high" {
-				result.High++
-				result.Total++
-			} else if severity == "medium" {
-				result.Medium++
-				result.Total++
-			} else if severity == "low" {
-				result.Low++
-				result.Total++
-			} else if severity == "unknown" {
-				result.Unknown++
-				result.Total++
-			}
+			result.SeverityStat.Count(strings.ToLower(vuln.Severity))
 
 			vulns = append(vulns, models.ShortTrivyVulnerability{
 				ID:               vuln.VulnerabilityID,
@@ -327,6 +277,7 @@ func (s *TrivyScanner) getSummaryTemplate() (models.TrivySummaryTemplate, error)
 			})
 		}
 
+		result.Total = result.SeverityStat.Total()
 		result.Vulnerabilities = vulns
 		results = append(results, result)
 	}
@@ -425,22 +376,9 @@ func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) err
 				}
 			}
 
-			if baseVuln.Severity == "critical" {
-				result.Critical++
-				result.Total++
-			} else if baseVuln.Severity == "high" {
-				result.High++
-				result.Total++
-			} else if baseVuln.Severity == "medium" {
-				result.Medium++
-				result.Total++
-			} else if baseVuln.Severity == "low" {
-				result.Low++
-				result.Total++
-			} else if baseVuln.Severity == "unknown" {
-				result.Unknown++
-				result.Total++
-			}
+			result.SeverityStat.Count(baseVuln.Severity)
+
+			result.Total = result.SeverityStat.Total()
 			fixedResults[baseVuln.Target] = result
 		}
 	}
@@ -477,22 +415,9 @@ func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) err
 				}
 			}
 
-			if currentVuln.Severity == "critical" {
-				result.Critical++
-				result.Total++
-			} else if currentVuln.Severity == "high" {
-				result.High++
-				result.Total++
-			} else if currentVuln.Severity == "medium" {
-				result.Medium++
-				result.Total++
-			} else if currentVuln.Severity == "low" {
-				result.Low++
-				result.Total++
-			} else if currentVuln.Severity == "unknown" {
-				result.Unknown++
-				result.Total++
-			}
+			result.SeverityStat.Count(currentVuln.Severity)
+			result.Total = result.SeverityStat.Total()
+
 			newFoundResults[currentVuln.Target] = result
 		}
 	}

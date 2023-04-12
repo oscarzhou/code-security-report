@@ -102,11 +102,7 @@ type ShortTrivyResult struct {
 	Target          string
 	Type            string
 	Vulnerabilities []ShortTrivyVulnerability
-	Critical        int64
-	High            int64
-	Medium          int64
-	Low             int64
-	Unknown         int64
+	SeverityStat    SeverityStat
 	Total           int64
 }
 

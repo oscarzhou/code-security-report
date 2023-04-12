@@ -56,30 +56,9 @@ func (s *SnykScanner) Scan() (Result, error) {
 
 		langs[vuln.Language] = struct{}{}
 
-		if vuln.Severity == "critical" {
-			result.Critical++
-		} else if vuln.Severity == "high" {
-			result.High++
-		} else if vuln.Severity == "medium" {
-			result.Medium++
-		} else if vuln.Severity == "low" {
-			result.Low++
-		} else if vuln.Severity == "unknown" {
-			result.Unknown++
-		}
-
+		result.SeverityStat.Count(vuln.Severity)
 		if vuln.IsPatchable || vuln.IsUpgradable {
-			if vuln.Severity == "critical" {
-				result.FixableCritical++
-			} else if vuln.Severity == "high" {
-				result.FixableHigh++
-			} else if vuln.Severity == "medium" {
-				result.FixableMedium++
-			} else if vuln.Severity == "low" {
-				result.FixableLow++
-			} else if vuln.Severity == "unknown" {
-				result.FixableUnknown++
-			}
+			result.FixableSeverityStat.Count(vuln.Severity)
 		}
 	}
 	result.GetTotal()
@@ -138,17 +117,7 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 		}
 
 		if !matched {
-			if baseVuln.Severity == "critical" {
-				fixed.Critical++
-			} else if baseVuln.Severity == "high" {
-				fixed.High++
-			} else if baseVuln.Severity == "medium" {
-				fixed.Medium++
-			} else if baseVuln.Severity == "low" {
-				fixed.Low++
-			} else if baseVuln.Severity == "unknown" {
-				fixed.Unknown++
-			}
+			fixed.SeverityStat.Count(baseVuln.Severity)
 		}
 	}
 	fixed.GetTotal()
@@ -169,17 +138,7 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 		_, exist := compared.ScannedVulnerabilities[currentVuln.ID]
 
 		if !matched && !exist {
-			if currentVuln.Severity == "critical" {
-				newFound.Critical++
-			} else if currentVuln.Severity == "high" {
-				newFound.High++
-			} else if currentVuln.Severity == "medium" {
-				newFound.Medium++
-			} else if currentVuln.Severity == "low" {
-				newFound.Low++
-			} else if currentVuln.Severity == "unknown" {
-				newFound.Unknown++
-			}
+			newFound.SeverityStat.Count(currentVuln.Severity)
 		}
 	}
 	newFound.GetTotal()
@@ -248,12 +207,8 @@ func (s *SnykScanner) Export(outputType, filename string) error {
 		Name:            s.Snyk.ProjectName,
 		Languages:       result.Languages,
 		Vulnerabilities: vulns,
-		Critical:        result.Critical,
-		High:            result.High,
-		Medium:          result.Medium,
-		Low:             result.Low,
-		Unknown:         result.Unknown,
-		Total:           result.Total,
+		SeverityStat:    result.SeverityStat,
+		Total:           result.SeverityStat.Total(),
 	}
 
 	name := filename
@@ -313,12 +268,8 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 		Name:            compared.Snyk.ProjectName,
 		Languages:       baseResult.Languages,
 		Vulnerabilities: baseVulns,
-		Critical:        baseResult.Critical,
-		High:            baseResult.High,
-		Medium:          baseResult.Medium,
-		Low:             baseResult.Low,
-		Unknown:         baseResult.Unknown,
-		Total:           baseResult.Total,
+		SeverityStat:    baseResult.SeverityStat,
+		Total:           baseResult.SeverityStat.Total(),
 	}
 
 	if baseSummary.Name == "" || len(baseSummary.Languages) == 0 {
@@ -350,24 +301,12 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 
 		if !matched {
 			fixedSummary.Vulnerabilities = append(fixedSummary.Vulnerabilities, baseVuln)
-			if baseVuln.Severity == "critical" {
-				fixedSummary.Critical++
-				fixedSummary.Total++
-			} else if baseVuln.Severity == "high" {
-				fixedSummary.High++
-				fixedSummary.Total++
-			} else if baseVuln.Severity == "medium" {
-				fixedSummary.Medium++
-				fixedSummary.Total++
-			} else if baseVuln.Severity == "low" {
-				fixedSummary.Low++
-				fixedSummary.Total++
-			} else if baseVuln.Severity == "unknown" {
-				fixedSummary.Unknown++
-				fixedSummary.Total++
-			}
+			fixedSummary.SeverityStat.Count(baseVuln.Severity)
+
 		}
 	}
+
+	fixedSummary.Total = fixedSummary.SeverityStat.Total()
 	snykTmpl.FixedSummary = fixedSummary
 
 	newFoundSummary := models.SnykSummaryTemplate{}
@@ -385,24 +324,11 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 
 		if !matched && !exist {
 			newFoundSummary.Vulnerabilities = append(newFoundSummary.Vulnerabilities, currentVuln)
-			if currentVuln.Severity == "critical" {
-				newFoundSummary.Critical++
-				newFoundSummary.Total++
-			} else if currentVuln.Severity == "high" {
-				newFoundSummary.High++
-				newFoundSummary.Total++
-			} else if currentVuln.Severity == "medium" {
-				newFoundSummary.Medium++
-				newFoundSummary.Total++
-			} else if currentVuln.Severity == "low" {
-				newFoundSummary.Low++
-				newFoundSummary.Total++
-			} else if currentVuln.Severity == "unknown" {
-				newFoundSummary.Unknown++
-				newFoundSummary.Total++
-			}
+			newFoundSummary.SeverityStat.Count(currentVuln.Severity)
+
 		}
 	}
+	newFoundSummary.Total = fixedSummary.SeverityStat.Total()
 
 	snykTmpl.NewFoundSummary = newFoundSummary
 
