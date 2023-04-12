@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oscarzhou/scan-report/models"
-	"github.com/oscarzhou/scan-report/templates"
+	"github.com/oscarzhou/code-security-report/models"
+	"github.com/oscarzhou/code-security-report/templates"
 )
 
 var (
@@ -213,7 +213,7 @@ func (s *SnykScanner) Export(outputType, filename string) error {
 
 	name := filename
 	if filename == "" {
-		name = fmt.Sprintf("scan-report-%s-%d.html", snykTmpl.Name, time.Now().Unix())
+		name = fmt.Sprintf("code-security-report-%s-%d.html", snykTmpl.Name, time.Now().Unix())
 		name = strings.ReplaceAll(name, "/", "-")
 	} else {
 		if !strings.HasSuffix(name, ".html") {
@@ -334,7 +334,7 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 
 	name := filename
 	if filename == "" {
-		name = fmt.Sprintf("scan-report-%s-%d.html", snykTmpl.BaseSummary.Name, time.Now().Unix())
+		name = fmt.Sprintf("code-security-report-%s-%d.html", snykTmpl.BaseSummary.Name, time.Now().Unix())
 		name = strings.ReplaceAll(name, "/", "-")
 	} else {
 		if !strings.HasSuffix(name, ".html") {

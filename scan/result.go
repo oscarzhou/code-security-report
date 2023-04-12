@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/oscarzhou/scan-report/models"
+	"github.com/oscarzhou/code-security-report/models"
 )
 
 const (

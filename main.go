@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/oscarzhou/scan-report/cmd"
-	"github.com/oscarzhou/scan-report/scan"
+	"github.com/oscarzhou/code-security-report/cmd"
+	"github.com/oscarzhou/code-security-report/scan"
 )
 
 func main() {

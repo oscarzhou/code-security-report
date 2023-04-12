@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oscarzhou/scan-report/models"
-	"github.com/oscarzhou/scan-report/templates"
+	"github.com/oscarzhou/code-security-report/models"
+	"github.com/oscarzhou/code-security-report/templates"
 )
 
 type TrivyScanner struct {
@@ -294,7 +294,7 @@ func (s *TrivyScanner) Export(outputType, filename string) error {
 
 	name := filename
 	if filename == "" {
-		name = fmt.Sprintf("scan-report-%s-%d.html", trivyTmpl.Name, time.Now().Unix())
+		name = fmt.Sprintf("code-security-report-%s-%d.html", trivyTmpl.Name, time.Now().Unix())
 		name = strings.ReplaceAll(name, "/", "-")
 	} else {
 		if !strings.HasSuffix(name, ".html") {
@@ -429,7 +429,7 @@ func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) err
 
 	name := filename
 	if filename == "" {
-		name = fmt.Sprintf("scan-report-%s-%d.html", trivyTmpl.BaseSummary.Name, time.Now().Unix())
+		name = fmt.Sprintf("code-security-report-%s-%d.html", trivyTmpl.BaseSummary.Name, time.Now().Unix())
 		name = strings.ReplaceAll(name, "/", "-")
 	} else {
 		if !strings.HasSuffix(name, ".html") {
