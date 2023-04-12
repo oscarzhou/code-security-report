@@ -12,7 +12,7 @@ const (
 	RESULT_FAILURE string = "failure"
 )
 
-type Result struct {
+type SumResult struct {
 	ScannedObjects      int64 `json:",omitempty;scannedObjects"`
 	SeverityStat        models.SeverityStat
 	Total               int64 `json:"total"`
@@ -22,54 +22,21 @@ type Result struct {
 	Status              string `json:"status"`
 }
 
-func (r *Result) GetTotal() {
+func (r *SumResult) GetTotal() {
 	r.Total = r.SeverityStat.Total()
 }
 
-func (r *Result) SetSummary() {
+func (r *SumResult) SetSummary() {
 	r.Summary = GetCommonSummary(r)
 }
 
-func GetCommonSummary(r *Result) string {
+func GetCommonSummary(r *SumResult) string {
 	return r.SeverityStat.Summarize()
 }
 
-func (r *Result) Output(outputType string) {
+func (r *SumResult) Output(outputType string) {
 	if outputType == "matrix" {
-		results := []Result{*r}
-
-		ret, err := json.Marshal(results)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-
-		fmt.Println(string(ret))
-		return
-	}
-
-	ret, err := json.Marshal(r)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-	fmt.Println(string(ret))
-}
-
-type DiffResult struct {
-	Base     Result
-	Fixed    Result
-	NewFound Result
-	Summary  string
-	Status   string
-}
-
-func (r *DiffResult) Summarize() {
-	r.Summary = fmt.Sprintf("Base summary:%s, Fixed summary:%s, New found summary:%s.", r.Base.Summary, r.Fixed.Summary, r.NewFound.Summary)
-}
-
-func (r *DiffResult) Output(outputType string) {
-	if outputType == "matrix" {
-		results := []DiffResult{*r}
+		results := []SumResult{*r}
 
 		ret, err := json.Marshal(results)
 		if err != nil {

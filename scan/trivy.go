@@ -37,8 +37,8 @@ func NewTrivyScanner(path string) (*TrivyScanner, error) {
 	return trivy, nil
 }
 
-func (s *TrivyScanner) Scan() (Result, error) {
-	var result Result
+func (s *TrivyScanner) Scan() (SumResult, error) {
+	var result SumResult
 
 	for _, res := range s.Trivy.Results {
 		counts := [5]int64{0, 0, 0, 0, 0}
@@ -111,8 +111,8 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 	baseVulns := compared.getShortVulnerabilities()
 
 	var (
-		fixed    Result
-		newFound Result
+		fixed    SumResult
+		newFound SumResult
 	)
 
 	// scan the fixed vulnerabilities

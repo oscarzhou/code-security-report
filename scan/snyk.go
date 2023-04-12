@@ -18,7 +18,8 @@ var (
 )
 
 type SnykScanner struct {
-	Snyk                   models.Snyk
+	Snyk models.Snyk
+	// Record the scanned vulnerabilities
 	ScannedVulnerabilities map[string]struct{}
 }
 
@@ -42,13 +43,15 @@ func NewSnykScanner(path string) (*SnykScanner, error) {
 	return snyk, nil
 }
 
-func (s *SnykScanner) Scan() (Result, error) {
-	var result Result
+func (s *SnykScanner) Scan() (SumResult, error) {
+	var result SumResult
 	langs := make(map[string]struct{})
 
+	// scan vulnerabilities
 	for _, vuln := range s.Snyk.Vulnerabilities {
 		_, ok := s.ScannedVulnerabilities[vuln.ID]
 		if ok {
+			// If the vulnerability has been scanned, skip it
 			continue
 		}
 
@@ -63,7 +66,9 @@ func (s *SnykScanner) Scan() (Result, error) {
 	}
 	result.GetTotal()
 	result.ScannedObjects = s.Snyk.DependencyCount
+
 	if result.Total > 0 {
+		// If there are vulnerabilities, the result status is failure
 		result.Status = RESULT_FAILURE
 	} else {
 		result.Status = RESULT_SUCCESS
@@ -102,8 +107,8 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 	baseVulns := compared.getShortVulnerabilities()
 
 	var (
-		fixed    Result
-		newFound Result
+		fixed    SumResult
+		newFound SumResult
 	)
 
 	// scan the fixed vulnerabilities
@@ -183,7 +188,7 @@ func (s *SnykScanner) getSummary() string {
 	// build summary
 	stringBuilder := ""
 	if s.Snyk.DependencyCount > 0 {
-		stringBuilder = fmt.Sprintf("Tested %d dependencies for known issues.", s.Snyk.DependencyCount)
+		stringBuilder = fmt.Sprintf("Tested %d dependencies for known issues.\n", s.Snyk.DependencyCount)
 	}
 
 	return stringBuilder
