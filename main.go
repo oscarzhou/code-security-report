@@ -1,156 +1,36 @@
 package main
 
 import (
-	"flag"
-	"log"
+	"fmt"
 	"os"
 
+	"github.com/alecthomas/kong"
 	"github.com/oscarzhou/code-security-report/cmd"
-	"github.com/oscarzhou/code-security-report/scan"
+	"github.com/oscarzhou/code-security-report/logutil"
 )
 
 func main() {
-	command := os.Args[1]
-	os.Args = append(os.Args[:1], os.Args[2:]...)
 
-	var config GlobalConfig
-	flag.StringVar(&config.ReportType, "report-type", "", "snyk,trivy,gosec")
-	flag.StringVar(&config.Path, "path", "", "/path/to/current-file.json")
-	flag.StringVar(&config.CompareTo, "compare-to", "", "/path/to/previous-file.json")
-	flag.StringVar(&config.OutputType, "output-type", "", "matrix,table")
-	flag.BoolVar(&config.Export, "export", false, "export the result to a html file")
-	flag.StringVar(&config.ExportFilename, "export-filename", "", "")
-	flag.Parse()
+	cli := cmd.CLI{}
+	cliCtx := kong.Parse(&cli,
+		kong.Name("code-security-report"),
+		kong.Description("A tool to compare security report from different tools"),
+		kong.UsageOnError(),
+		kong.ConfigureHelp(kong.HelpOptions{
+			Compact: true,
+			Summary: true,
+		}),
+		kong.Vars{
+			"version": cmd.TOOL_VERSION,
+		})
 
-	switch command {
-	case "version":
-		cmd.GetVersion()
-		break
+	logutil.ConfigureLogger(cli.PrettyLog)
+	logutil.SetLoggingLevel(logutil.Level(cli.LogLevel))
 
-	case "summary":
-		if config.ReportType == "" {
-			log.Fatal("report type not set")
-		} else {
-			if !(config.ReportType == "snyk" || config.ReportType == "trivy" || config.ReportType == "gosec") {
-				log.Fatal("unrecoginize report type")
-			}
-		}
-
-		if config.Path == "" {
-			log.Fatal("path not set")
-		}
-
-		var (
-			s   scan.Scanner
-			err error
-		)
-		switch config.ReportType {
-		case "snyk":
-			s, err = scan.NewSnykScanner(config.Path)
-
-		case "trivy":
-			s, err = scan.NewTrivyScanner(config.Path)
-
-		case "gosec":
-
-		}
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if config.Export {
-			err = s.Export(config.OutputType, config.ExportFilename)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-		} else {
-			result, err := s.Scan()
-			if err != nil {
-				log.Fatal(err)
-			}
-			result.Output(config.OutputType)
-		}
-
-	case "diff":
-		if config.ReportType == "" {
-			log.Fatal("report type not set")
-		} else {
-			if !(config.ReportType == "snyk" || config.ReportType == "trivy" || config.ReportType == "gosec") {
-				log.Fatal("unrecoginize report type")
-			}
-		}
-
-		if config.Path == "" {
-			log.Fatal("path not set")
-		}
-
-		if config.CompareTo == "" {
-			log.Fatal("compared path not set")
-		}
-
-		var (
-			s    scan.Scanner
-			base scan.Scanner
-			err  error
-		)
-
-		switch config.ReportType {
-		case "snyk":
-			s, err = scan.NewSnykScanner(config.Path)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			base, err = scan.NewSnykScanner(config.CompareTo)
-			if err != nil && err != scan.ErrNullFile {
-				log.Fatal(err)
-			}
-
-		case "trivy":
-			s, err = scan.NewTrivyScanner(config.Path)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			base, err = scan.NewTrivyScanner(config.CompareTo)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-		case "gosec":
-
-		}
-
-		if config.Export {
-			err = s.ExportDiff(base, config.OutputType, config.ExportFilename)
-			if err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			result, err := s.Diff(base)
-			if err != nil {
-				log.Fatal(err)
-			}
-			result.Output(config.OutputType)
-		}
-
-	case "ls":
-		cmd.List(config.Path)
-		break
-
-	case "help":
-		cmd.Help()
-		break
+	err := cliCtx.Run()
+	if err != nil {
+		fmt.Println("err=", err)
+		cliCtx.FatalIfErrorf(err)
 	}
-}
-
-type GlobalConfig struct {
-	ReportType     string
-	Path           string
-	OutputType     string
-	CompareTo      string
-	Export         bool
-	ExportFilename string
+	os.Exit(0)
 }
