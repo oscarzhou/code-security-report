@@ -64,7 +64,6 @@ func (s *SnykScanner) Scan() (SumResult, error) {
 			result.FixableSeverityStat.Count(vuln.Severity)
 		}
 	}
-	result.GetTotal()
 	result.ScannedObjects = s.Snyk.DependencyCount
 
 	if result.Total > 0 {
@@ -78,8 +77,8 @@ func (s *SnykScanner) Scan() (SumResult, error) {
 		result.Languages = append(result.Languages, lang)
 	}
 
-	result.Summary = s.getSummary()
-	result.SetSummary()
+	result.Total = result.SeverityStat.Total()
+	result.Summary = result.SeverityStat.Summarize()
 
 	return result, nil
 }
@@ -115,6 +114,8 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 	for _, baseVuln := range baseVulns {
 		matched := false
 		for _, currentVuln := range vulns {
+			// check if the old vulnerability is fixed
+			//
 			if baseVuln.ID == currentVuln.ID {
 				matched = true
 				break
@@ -125,9 +126,9 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 			fixed.SeverityStat.Count(baseVuln.Severity)
 		}
 	}
-	fixed.GetTotal()
-	fixed.Summary = s.getSummary()
-	fixed.SetSummary()
+
+	fixed.Total = fixed.SeverityStat.Total()
+	fixed.Summary = fixed.SeverityStat.Summarize()
 	result.Fixed = fixed
 
 	// scan the new vulnerabilities
@@ -146,9 +147,9 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 			newFound.SeverityStat.Count(currentVuln.Severity)
 		}
 	}
-	newFound.GetTotal()
-	newFound.Summary = s.getSummary()
-	newFound.SetSummary()
+
+	newFound.Total = newFound.SeverityStat.Total()
+	newFound.Summary = newFound.SeverityStat.Summarize()
 	result.NewFound = newFound
 
 	if result.NewFound.Total == 0 {

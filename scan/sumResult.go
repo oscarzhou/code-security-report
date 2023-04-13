@@ -22,18 +22,6 @@ type SumResult struct {
 	Status              string `json:"status"`
 }
 
-func (r *SumResult) GetTotal() {
-	r.Total = r.SeverityStat.Total()
-}
-
-func (r *SumResult) SetSummary() {
-	r.Summary = GetCommonSummary(r)
-}
-
-func GetCommonSummary(r *SumResult) string {
-	return r.SeverityStat.Summarize()
-}
-
 func (r *SumResult) Output(outputType string) {
 	if outputType == "matrix" {
 		results := []SumResult{*r}

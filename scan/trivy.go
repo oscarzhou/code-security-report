@@ -70,7 +70,7 @@ func (s *TrivyScanner) Scan() (SumResult, error) {
 		s.ScannedTargets[res.Target] = counts
 	}
 
-	result.GetTotal()
+	result.Total = result.SeverityStat.Total()
 	result.ScannedObjects = int64(len(s.Trivy.Results))
 	if result.Total > 0 {
 		result.Status = RESULT_FAILURE
@@ -78,9 +78,7 @@ func (s *TrivyScanner) Scan() (SumResult, error) {
 		result.Status = RESULT_SUCCESS
 	}
 
-	result.Summary = s.getSummary()
-	result.SetSummary()
-
+	result.Summary = result.SeverityStat.Summarize()
 	return result, nil
 }
 
@@ -130,9 +128,9 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 
 		}
 	}
-	fixed.GetTotal()
-	fixed.Summary = s.getSummary()
-	fixed.SetSummary()
+
+	fixed.Total = fixed.SeverityStat.Total()
+	fixed.Summary = fixed.SeverityStat.Summarize()
 	result.Fixed = fixed
 
 	// scan the new vulnerabilities
@@ -165,9 +163,8 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 		s.ScannedTargets[currentVuln.Target] = counts
 	}
 
-	newFound.GetTotal()
-	newFound.Summary = s.getSummary()
-	newFound.SetSummary()
+	newFound.Total = newFound.SeverityStat.Total()
+	newFound.Summary = newFound.SeverityStat.Summarize()
 	result.NewFound = newFound
 
 	if result.NewFound.Total == 0 {

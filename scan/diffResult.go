@@ -14,7 +14,7 @@ type DiffResult struct {
 }
 
 func (r *DiffResult) Summarize() {
-	r.Summary = fmt.Sprintf("Base summary:%s, Fixed summary:%s, New found summary:%s.", r.Base.Summary, r.Fixed.Summary, r.NewFound.Summary)
+	r.Summary = fmt.Sprintf("Base summary:%s\n, Fixed summary:%s\n, New found summary:%s.", r.Base.Summary, r.Fixed.Summary, r.NewFound.Summary)
 }
 
 func (r *DiffResult) Output(outputType string) {
