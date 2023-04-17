@@ -1,0 +1,24 @@
+name: Build & Push Docker image
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build the Docker image
+        run: | 
+          docker build -t oscarzhou/code-security-report:latest -f Dockerfile .
+          docker tag oscarzhou/code-security-report:latest oscarzhou/code-security-report:${{ github.sha | slice: 0, 7 }}
+      - name: Login to DockerHub
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      - name: Push the Docker image
+        run: | 
+          docker push oscarzhou/code-security-report:latest
+          docker push oscarzhou/code-security-report:${{ github.sha | slice: 0, 7 }}
