@@ -23,7 +23,7 @@ function build_docker() {
 
 	semver=${MAJOR}.${MINOR}.${PATCH}
 	build_binary
-	docker build -t oscarzhou/scan-report:${semver} -t oscarzhou/scan-report:latest -f Dockerfile .
+	docker build -t oscarzhou/code-security-report:${semver} -t oscarzhou/code-security-report:latest -f Dockerfile .
 }
 
 
@@ -34,7 +34,7 @@ function push_image() {
 	read -p "patch: " PATCH
 
 	semver=${MAJOR}.${MINOR}.${PATCH}
-	docker image push oscarzhou/scan-report:${semver}
+	docker image push oscarzhou/code-security-report:${semver}
 }
 
 function main() {

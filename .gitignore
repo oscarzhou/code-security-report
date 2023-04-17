@@ -2,5 +2,5 @@
 /binary
 dockerrun.sh
 execrun.sh
-scan-report
+code-security-report
 /output

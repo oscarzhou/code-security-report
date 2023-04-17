@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/oscarzhou/scan-report/models"
-	"github.com/oscarzhou/scan-report/templates"
+	"github.com/oscarzhou/code-security-report/models"
+	"github.com/oscarzhou/code-security-report/templates"
 )
 
 type TrivyScanner struct {
@@ -37,8 +37,8 @@ func NewTrivyScanner(path string) (*TrivyScanner, error) {
 	return trivy, nil
 }
 
-func (s *TrivyScanner) Scan() (Result, error) {
-	var result Result
+func (s *TrivyScanner) Scan() (SumResult, error) {
+	var result SumResult
 
 	for _, res := range s.Trivy.Results {
 		counts := [5]int64{0, 0, 0, 0, 0}
@@ -70,7 +70,7 @@ func (s *TrivyScanner) Scan() (Result, error) {
 		s.ScannedTargets[res.Target] = counts
 	}
 
-	result.GetTotal()
+	result.Total = result.SeverityStat.Total()
 	result.ScannedObjects = int64(len(s.Trivy.Results))
 	if result.Total > 0 {
 		result.Status = RESULT_FAILURE
@@ -78,9 +78,7 @@ func (s *TrivyScanner) Scan() (Result, error) {
 		result.Status = RESULT_SUCCESS
 	}
 
-	result.Summary = s.getSummary()
-	result.SetSummary()
-
+	result.Summary = result.SeverityStat.Summarize()
 	return result, nil
 }
 
@@ -111,8 +109,8 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 	baseVulns := compared.getShortVulnerabilities()
 
 	var (
-		fixed    Result
-		newFound Result
+		fixed    SumResult
+		newFound SumResult
 	)
 
 	// scan the fixed vulnerabilities
@@ -130,9 +128,9 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 
 		}
 	}
-	fixed.GetTotal()
-	fixed.Summary = s.getSummary()
-	fixed.SetSummary()
+
+	fixed.Total = fixed.SeverityStat.Total()
+	fixed.Summary = fixed.SeverityStat.Summarize()
 	result.Fixed = fixed
 
 	// scan the new vulnerabilities
@@ -165,9 +163,8 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 		s.ScannedTargets[currentVuln.Target] = counts
 	}
 
-	newFound.GetTotal()
-	newFound.Summary = s.getSummary()
-	newFound.SetSummary()
+	newFound.Total = newFound.SeverityStat.Total()
+	newFound.Summary = newFound.SeverityStat.Summarize()
 	result.NewFound = newFound
 
 	if result.NewFound.Total == 0 {
@@ -294,7 +291,7 @@ func (s *TrivyScanner) Export(outputType, filename string) error {
 
 	name := filename
 	if filename == "" {
-		name = fmt.Sprintf("scan-report-%s-%d.html", trivyTmpl.Name, time.Now().Unix())
+		name = fmt.Sprintf("code-security-report-%s-%d.html", trivyTmpl.Name, time.Now().Unix())
 		name = strings.ReplaceAll(name, "/", "-")
 	} else {
 		if !strings.HasSuffix(name, ".html") {
@@ -429,7 +426,7 @@ func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) err
 
 	name := filename
 	if filename == "" {
-		name = fmt.Sprintf("scan-report-%s-%d.html", trivyTmpl.BaseSummary.Name, time.Now().Unix())
+		name = fmt.Sprintf("code-security-report-%s-%d.html", trivyTmpl.BaseSummary.Name, time.Now().Unix())
 		name = strings.ReplaceAll(name, "/", "-")
 	} else {
 		if !strings.HasSuffix(name, ".html") {
