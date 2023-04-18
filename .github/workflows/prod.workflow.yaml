@@ -6,7 +6,8 @@ on:
       - main
 
 jobs:
-  release:
+  build-and-push-image:
+    name: Build and push image
     runs-on: ubuntu-latest
     environment:
       name: production

@@ -7,7 +7,8 @@ on:
 env:
   GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}
 jobs:
-  build:
+  build-and-push-image:
+    name: Build and push image
     runs-on: ubuntu-latest
     if: >-
       github.event.pull_request && 
