@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/oscarzhou/code-security-report/models"
 	"github.com/oscarzhou/code-security-report/templates"
@@ -289,17 +288,7 @@ func (s *TrivyScanner) Export(outputType, filename string) error {
 		return err
 	}
 
-	name := filename
-	if filename == "" {
-		name = fmt.Sprintf("code-security-report-%s-%d.html", trivyTmpl.Name, time.Now().Unix())
-		name = strings.ReplaceAll(name, "/", "-")
-	} else {
-		if !strings.HasSuffix(name, ".html") {
-			name = fmt.Sprintf("%s.html", name)
-		}
-	}
-
-	f, err := os.OpenFile("./"+name, os.O_RDWR|os.O_CREATE, 0644)
+	f, err := ExportFile(filename)
 	if err != nil {
 		return err
 	}
@@ -424,17 +413,7 @@ func (s *TrivyScanner) ExportDiff(base Scanner, outputType, filename string) err
 	}
 	trivyTmpl.NewFoundSummary = newFoundSummary
 
-	name := filename
-	if filename == "" {
-		name = fmt.Sprintf("code-security-report-%s-%d.html", trivyTmpl.BaseSummary.Name, time.Now().Unix())
-		name = strings.ReplaceAll(name, "/", "-")
-	} else {
-		if !strings.HasSuffix(name, ".html") {
-			name = fmt.Sprintf("%s.html", name)
-		}
-	}
-
-	f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE, 0644)
+	f, err := ExportFile(filename)
 	if err != nil {
 		return err
 	}
