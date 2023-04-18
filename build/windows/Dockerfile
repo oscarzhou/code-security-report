@@ -18,6 +18,5 @@ USER ContainerAdministrator
 
 WORKDIR /app
 COPY dist .
-COPY templates/*.tmpl ./templates/
 VOLUME /data
 ENTRYPOINT ["C:/app/code-security-report.exe"]
