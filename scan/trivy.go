@@ -52,19 +52,22 @@ func (s *TrivyScanner) Scan() (SumResult, error) {
 			s.ScannedVulnerabilities[vulnID] = struct{}{}
 
 			severity := strings.ToLower(vuln.Severity)
-
+			if severity == "critical" {
+				counts[0]++
+			} else if severity == "high" {
+				counts[1]++
+			} else if severity == "medium" {
+				counts[2]++
+			} else if severity == "low" {
+				counts[3]++
+			} else if severity == "unknown" {
+				counts[4]++
+			}
 			result.SeverityStat.Count(severity)
 			if vuln.FixedVersion != "" {
 				result.FixableSeverityStat.Count(severity)
-
 			}
 		}
-
-		counts[0] = result.SeverityStat.Critical
-		counts[1] = result.SeverityStat.High
-		counts[2] = result.SeverityStat.Medium
-		counts[3] = result.SeverityStat.Low
-		counts[4] = result.SeverityStat.Unknown
 
 		s.ScannedTargets[res.Target] = counts
 	}
@@ -77,7 +80,7 @@ func (s *TrivyScanner) Scan() (SumResult, error) {
 		result.Status = RESULT_SUCCESS
 	}
 
-	result.Summary = result.SeverityStat.Summarize()
+	result.Summary = s.getDependencySummary() + " " + result.SeverityStat.Summarize()
 	return result, nil
 }
 
@@ -129,7 +132,7 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 	}
 
 	fixed.Total = fixed.SeverityStat.Total()
-	fixed.Summary = fixed.SeverityStat.Summarize()
+	fixed.Summary = s.getDependencySummary() + " " + fixed.SeverityStat.Summarize()
 	result.Fixed = fixed
 
 	// scan the new vulnerabilities
@@ -152,18 +155,25 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 
 		if !matched && !exist {
 			newFound.SeverityStat.Count(currentVuln.Severity)
-
+			severity := currentVuln.Severity
+			if severity == "critical" {
+				counts[0]++
+			} else if severity == "high" {
+				counts[1]++
+			} else if severity == "medium" {
+				counts[2]++
+			} else if severity == "low" {
+				counts[3]++
+			} else if severity == "unknown" {
+				counts[4]++
+			}
 		}
-		counts[0] = newFound.SeverityStat.Critical
-		counts[1] = newFound.SeverityStat.High
-		counts[2] = newFound.SeverityStat.Medium
-		counts[3] = newFound.SeverityStat.Low
-		counts[4] = newFound.SeverityStat.Unknown
+
 		s.ScannedTargets[currentVuln.Target] = counts
 	}
 
 	newFound.Total = newFound.SeverityStat.Total()
-	newFound.Summary = newFound.SeverityStat.Summarize()
+	newFound.Summary = s.getDependencySummary() + " " + newFound.SeverityStat.Summarize()
 	result.NewFound = newFound
 
 	if result.NewFound.Total == 0 {
@@ -206,7 +216,7 @@ func (s *TrivyScanner) getShortVulnerabilities() []models.ShortTrivyVulnerabilit
 	return vulns
 }
 
-func (s *TrivyScanner) getSummary() string {
+func (s *TrivyScanner) getDependencySummary() string {
 	// build summary
 	stringBuilder := ""
 	if len(s.Trivy.Results) > 0 {
@@ -230,7 +240,7 @@ func (s *TrivyScanner) getSummary() string {
 				targetBuilder = fmt.Sprintf("%s Unknown:%d", targetBuilder, counts[4])
 			}
 
-			stringBuilder = fmt.Sprintf("%s %s", stringBuilder, targetBuilder)
+			stringBuilder = fmt.Sprintf("%s %s |", stringBuilder, targetBuilder)
 		}
 	}
 

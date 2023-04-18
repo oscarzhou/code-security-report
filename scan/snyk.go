@@ -77,7 +77,7 @@ func (s *SnykScanner) Scan() (SumResult, error) {
 	}
 
 	result.Total = result.SeverityStat.Total()
-	result.Summary = result.SeverityStat.Summarize()
+	result.Summary = s.getDependencySummary() + " " + result.SeverityStat.Summarize()
 
 	return result, nil
 }
@@ -127,7 +127,7 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 	}
 
 	fixed.Total = fixed.SeverityStat.Total()
-	fixed.Summary = fixed.SeverityStat.Summarize()
+	fixed.Summary = s.getDependencySummary() + " " + fixed.SeverityStat.Summarize()
 	result.Fixed = fixed
 
 	// scan the new vulnerabilities
@@ -148,7 +148,7 @@ func (s *SnykScanner) Diff(base Scanner) (DiffResult, error) {
 	}
 
 	newFound.Total = newFound.SeverityStat.Total()
-	newFound.Summary = newFound.SeverityStat.Summarize()
+	newFound.Summary = s.getDependencySummary() + " " + newFound.SeverityStat.Summarize()
 	result.NewFound = newFound
 
 	if result.NewFound.Total == 0 {
@@ -184,7 +184,7 @@ func (s *SnykScanner) getShortVulnerabilities() []models.ShortSnykVulnerability 
 	return vulns
 }
 
-func (s *SnykScanner) getSummary() string {
+func (s *SnykScanner) getDependencySummary() string {
 	// build summary
 	stringBuilder := ""
 	if s.Snyk.DependencyCount > 0 {
