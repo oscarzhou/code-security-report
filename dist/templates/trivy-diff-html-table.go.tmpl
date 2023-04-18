@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>{{ .BaseSummary.Name }} | {{ .BaseSummary.Type }}</title>
+	<style>
+        .summary {
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+        }
+
+        .summary td, .summary th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        }
+
+        .summary tr:nth-child(even){background-color: #f2f2f2;}
+
+        .summary tr:hover {background-color: #ddd;}
+
+        .summary th {
+        padding-top: 12px;
+        padding-bottom: 12px;
+        text-align: left;
+        background-color: #04AA6D;
+        color: white;
+        }
+    </style>
+</head>
+<body>
+
+
+<h2> Project: {{ .BaseSummary.Name }}, Type: {{ .BaseSummary.Type }} </h2>
+
+<br/>
+
+Compare to the develop branch 
+
+<h3> New found vulnerabilities in the current branch</h3>
+
+{{with .NewFoundSummary}}
+
+{{ range .Results }}
+
+{{ .Target }} ({{ .Type }})
+<br/>
+Total: {{ .Total }} (UNKNOWN: {{ .SeverityStat.Unknown }}, LOW: {{ .SeverityStat.Low }}, MEDIUM: {{ .SeverityStat.Medium }}, HIGH: {{ .SeverityStat.High }}, CRITICAL: {{ .SeverityStat.Critical }})
+
+<br/>
+
+<table class="summary">
+	<tr>
+      <th>MODULE NAME</th>
+      <th>VULNERABILITY ID</th>
+      <th>SEVERITY</th>
+      <th>INSTALLED VERSION</th>
+      <th>FXIED VERSION</th>
+      <th>TITLE</th>
+    </tr>
+    {{ range .Vulnerabilities }}
+	<tr>
+    	<td>{{ .PkgName }}</td>
+        <td>{{ .ID }}</td>
+        <td>{{ .Severity }}</td>
+        <td>{{ .InstalledVersion }}</td>
+        <td>{{ .FixedVersion }}</td>
+        <td>{{ .Title }}</td>
+    </tr>
+    {{ end }}
+</table>
+
+<br/>
+<br/>
+{{ end }}
+
+{{ end }}
+
+<br />
+
+<h3> Fixed vulnerabilities in the current branch</h3>
+
+{{with .FixedSummary}}
+
+{{ range .Results }}
+
+{{ .Target }} ({{ .Type }})
+<br/>
+Total: {{ .Total }} (UNKNOWN: {{ .SeverityStat.Unknown }}, LOW: {{ .SeverityStat.Low }}, MEDIUM: {{ .SeverityStat.Medium }}, HIGH: {{ .SeverityStat.High }}, CRITICAL: {{ .SeverityStat.Critical }})
+
+<br/>
+
+<table class="summary">
+	<tr>
+      <th>MODULE NAME</th>
+      <th>VULNERABILITY ID</th>
+      <th>SEVERITY</th>
+      <th>INSTALLED VERSION</th>
+      <th>FXIED VERSION</th>
+      <th>TITLE</th>
+    </tr>
+    {{ range .Vulnerabilities }}
+	<tr>
+    	<td>{{ .PkgName }}</td>
+        <td>{{ .ID }}</td>
+        <td>{{ .Severity }}</td>
+        <td>{{ .InstalledVersion }}</td>
+        <td>{{ .FixedVersion }}</td>
+        <td>{{ .Title }}</td>
+    </tr>
+    {{ end }}
+</table>
+
+<br/>
+<br/>
+{{ end }}
+
+{{ end }}
+
+<br />
+
+<h3> Develop branch </h3>
+
+{{with .BaseSummary}}
+
+{{ range .Results }}
+
+{{ .Target }} ({{ .Type }})
+<br/>
+Total: {{ .Total }} (UNKNOWN: {{ .SeverityStat.Unknown }}, LOW: {{ .SeverityStat.Low }}, MEDIUM: {{ .SeverityStat.Medium }}, HIGH: {{ .SeverityStat.High }}, CRITICAL: {{ .SeverityStat.Critical }})
+
+<br/>
+
+<table class="summary">
+	<tr>
+      <th>MODULE NAME</th>
+      <th>VULNERABILITY ID</th>
+      <th>SEVERITY</th>
+      <th>INSTALLED VERSION</th>
+      <th>FXIED VERSION</th>
+      <th>TITLE</th>
+    </tr>
+    {{ range .Vulnerabilities }}
+	<tr>
+    	<td>{{ .PkgName }}</td>
+        <td>{{ .ID }}</td>
+        <td>{{ .Severity }}</td>
+        <td>{{ .InstalledVersion }}</td>
+        <td>{{ .FixedVersion }}</td>
+        <td>{{ .Title }}</td>
+    </tr>
+    {{ end }}
+</table>
+
+<br/>
+<br/>
+{{ end }}
+
+{{ end }}
+
+<br />
+
+
+</body>
+</html>

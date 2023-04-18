@@ -7,7 +7,6 @@ import (
 	"html/template"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/oscarzhou/code-security-report/models"
 	"github.com/oscarzhou/code-security-report/templates"
@@ -217,17 +216,7 @@ func (s *SnykScanner) Export(outputType, filename string) error {
 		Total:           result.SeverityStat.Total(),
 	}
 
-	name := filename
-	if filename == "" {
-		name = fmt.Sprintf("code-security-report-%s-%d.html", snykTmpl.Name, time.Now().Unix())
-		name = strings.ReplaceAll(name, "/", "-")
-	} else {
-		if !strings.HasSuffix(name, ".html") {
-			name = fmt.Sprintf("%s.html", name)
-		}
-	}
-
-	f, err := os.OpenFile("./"+name, os.O_RDWR|os.O_CREATE, 0644)
+	f, err := ExportFile(filename)
 	if err != nil {
 		return err
 	}
@@ -338,17 +327,7 @@ func (s *SnykScanner) ExportDiff(base Scanner, outputType, filename string) erro
 
 	snykTmpl.NewFoundSummary = newFoundSummary
 
-	name := filename
-	if filename == "" {
-		name = fmt.Sprintf("code-security-report-%s-%d.html", snykTmpl.BaseSummary.Name, time.Now().Unix())
-		name = strings.ReplaceAll(name, "/", "-")
-	} else {
-		if !strings.HasSuffix(name, ".html") {
-			name = fmt.Sprintf("%s.html", name)
-		}
-	}
-
-	f, err := os.OpenFile("./"+name, os.O_RDWR|os.O_CREATE, 0644)
+	f, err := ExportFile(filename)
 	if err != nil {
 		return err
 	}
