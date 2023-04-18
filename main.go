@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/alecthomas/kong"
@@ -21,7 +20,7 @@ func main() {
 			Summary: true,
 		}),
 		kong.Vars{
-			"version": cmd.TOOL_VERSION,
+			"version": cmd.VERSION,
 		})
 
 	logutil.ConfigureLogger(cli.PrettyLog)
@@ -29,7 +28,6 @@ func main() {
 
 	err := cliCtx.Run()
 	if err != nil {
-		fmt.Println("err=", err)
 		cliCtx.FatalIfErrorf(err)
 	}
 	os.Exit(0)
