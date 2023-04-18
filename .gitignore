@@ -4,3 +4,4 @@ dockerrun.sh
 execrun.sh
 code-security-report
 /output
+/dist/fixtures
