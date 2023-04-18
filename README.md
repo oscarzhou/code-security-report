@@ -20,8 +20,8 @@ if: >-
     github.ref== 'refs/heads/master'
 id: set-matrix
 run: | 
-    result=$(docker run --rm -v /home/runner/work/repo:/data oscarzhou/code-security-report:0.1.5 summary -report-type=snyk -path="/data/snyk.json" -output-type=matrix)
-    echo "::set-output name=js_result::${result}"
+    result=$(docker run --rm -v /home/runner/work/repo:/data oscarzhou/code-security-report:latest summary --report-type=snyk --path="/data/snyk.json" --output-type=matrix)
+    echo "js_result=${result}" >> $GITHUB_OUTPUT
 ```
 
 ### 2. Diff two reports
@@ -33,8 +33,8 @@ if: >-
     github.ref != 'refs/heads/master'
 id: set-diff-matrix
 run: | 
-    result=$(docker run --rm -v /home/runner/work/repo:/data oscarzhou/code-security-report:0.1.5 diff -report-type=snyk -path="/data/go-snyk-feature.json" -compare-to="./data/go-snyk-develop.json" -output-type=matrix)
-    echo "::set-output name=go_diff_result::${result}"
+    result=$(docker run --rm -v /home/runner/work/repo:/data oscarzhou/code-security-report:latest diff --report-type=snyk --path="/data/go-snyk-feature.json" --compare-to="/data/go-snyk-develop.json" -output-type=matrix)
+    echo "js_diff_result=${result}" >> $GITHUB_OUTPUT
 ```
 
 ### 3. Export summary result 
@@ -42,7 +42,7 @@ run: |
 ```
 - name: Export scan result to html file 
 run: | 
-    $(docker run --rm -v ${{ github.workspace }}:/data oscarzhou/code-security-report:0.1.8 summary -report-type=snyk -path="/data/snyk.json" -output-type=table -export -export-filename="/data/go-result")
+    $(docker run --rm -v ${{ github.workspace }}:/data oscarzhou/code-security-report:latest summary --report-type=snyk --path="/data/snyk.json" --output-type=table --export --export-filename="/data/go-result")
 
 - name: Upload go result html file
 uses: actions/upload-artifact@v3
@@ -56,7 +56,7 @@ with:
 ```
 - name: Export scan result to html file 
 run: | 
-    $(docker run --rm -v ${{ github.workspace }}:/data oscarzhou/code-security-report:0.1.8 diff -report-type=snyk -path="/data/go-snyk-feature.json" -compare-to="/data/go-snyk-develop.json" -output-type=table -export -export-filename="/data/go-result")
+    $(docker run --rm -v ${{ github.workspace }}:/data oscarzhou/code-security-report:latest diff --report-type=snyk --path="/data/go-snyk-feature.json" --compare-to="/data/go-snyk-develop.json" --output-type=table --export --export-filename="/data/go-result")
 
 - name: Upload go result html file
 uses: actions/upload-artifact@v3
@@ -70,7 +70,7 @@ with:
 
 ### 1. Get summary of the report
 
-`./scanreport summary -report-type=snyk -path="./snyk-feature.json" -output-type=matrix`
+`./code-security-report summary --report-type=snyk --path="./snyk-feature.json" --output-type=matrix`
 
 #### Output: 
 
@@ -97,7 +97,7 @@ with:
 
 ### 2. Compare two reports
 
-`./scanreport diff -report-type=snyk -path="./snyk-feature.json" -compare-to="./snyk-develop.json" -output-type=matrix`
+`./code-security-report diff --report-type=snyk --path="./snyk-feature.json" --compare-to="./snyk-develop.json" --output-type=matrix`
 
 #### Output:
 
@@ -158,36 +158,36 @@ with:
 ]
 ```
 
-### 3. Export the summary report
+### 3. Export the `summary` report
 
 
-`./scanreport summary -report-type=snyk -path="./fixtures/snyk-feature.json" -export -output-type=table -export-filename="snyk-summary"`
+`./code-security-report summary --report-type=snyk --path="./fixtures/snyk-feature.json" --export --output-type=table --export-filename="snyk-summary"`
 
 
-### 4. Export the diff report
+### 4. Export the `diff` report
 
-`./scanreport diff -report-type=snyk -path="./fixtures/snyk-feature.json" -compare-to="./fixtures/snyk-develop.json" -output-type=table -export`
+`./code-security-report diff --report-type=snyk --path="./fixtures/snyk-feature.json" --compare-to="./fixtures/snyk-develop.json" --output-type=table --export`
 
-### 5. Debug with ls command
+### 5. Debug with `inspect` command
 
-`docker run --rm -v $PWD/fixtures:/data oscarzhou/code-security-report:latest ls -path=/data`
+`docker run --rm -v $PWD/fixtures:/data oscarzhou/code-security-report:latest inspect --target-dir=/data`
 
 
 ### 6. Check version
 
-`./scanreport version` 
+`./code-security-report version` 
 
 ## Examples with docker
 
 ### 1. Run with docker container
 
-`docker run --rm -v $PWD/fixtures:/data oscarzhou/code-security-report:<version> summary -report-type=snyk -path="/data/snyk.json"`
+`docker run --rm -v $PWD/fixtures:/data oscarzhou/code-security-report:latest summary --report-type=snyk --path="/data/snyk.json"`
 
 ### 2. Export with docker container
 
-`docker run --rm -v $PWD/fixtures:/data oscarzhou/code-security-report:<version> diff -report-type=snyk -path="./data/snyk-feature.json" -compare-to="./data/snyk-develop.json" -output-type=table -export -export-filename="./data/snyk-diff"`
+`docker run --rm -v $PWD/fixtures:/data oscarzhou/code-security-report:latest diff --report-type=snyk --path="./data/snyk-feature.json" --compare-to="./data/snyk-develop.json" --output-type=table --export --export-filename="./data/snyk-diff"`
 
 
 ## Command detail
 
-`./scanreport help`
+`./code-security-report help`
