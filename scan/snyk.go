@@ -188,7 +188,7 @@ func (s *SnykScanner) getDependencySummary() string {
 	// build summary
 	stringBuilder := ""
 	if s.Snyk.DependencyCount > 0 {
-		stringBuilder = fmt.Sprintf("Tested %d dependencies for known issues.\n", s.Snyk.DependencyCount)
+		stringBuilder = fmt.Sprintf("Tested %d dependencies for known issues. ", s.Snyk.DependencyCount)
 	}
 
 	return stringBuilder

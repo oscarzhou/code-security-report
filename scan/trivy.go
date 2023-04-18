@@ -52,15 +52,15 @@ func (s *TrivyScanner) Scan() (SumResult, error) {
 			s.ScannedVulnerabilities[vulnID] = struct{}{}
 
 			severity := strings.ToLower(vuln.Severity)
-			if severity == "critical" {
+			if severity == models.SEVERITY_LEVEL_CRITICAL {
 				counts[0]++
-			} else if severity == "high" {
+			} else if severity == models.SEVERITY_LEVEL_HIGH {
 				counts[1]++
-			} else if severity == "medium" {
+			} else if severity == models.SEVERITY_LEVEL_MEDIUM {
 				counts[2]++
-			} else if severity == "low" {
+			} else if severity == models.SEVERITY_LEVEL_LOW {
 				counts[3]++
-			} else if severity == "unknown" {
+			} else if severity == models.SEVERITY_LEVEL_UNKNOWN {
 				counts[4]++
 			}
 			result.SeverityStat.Count(severity)
@@ -156,15 +156,15 @@ func (s *TrivyScanner) Diff(base Scanner) (DiffResult, error) {
 		if !matched && !exist {
 			newFound.SeverityStat.Count(currentVuln.Severity)
 			severity := currentVuln.Severity
-			if severity == "critical" {
+			if severity == models.SEVERITY_LEVEL_CRITICAL {
 				counts[0]++
-			} else if severity == "high" {
+			} else if severity == models.SEVERITY_LEVEL_HIGH {
 				counts[1]++
-			} else if severity == "medium" {
+			} else if severity == models.SEVERITY_LEVEL_MEDIUM {
 				counts[2]++
-			} else if severity == "low" {
+			} else if severity == models.SEVERITY_LEVEL_LOW {
 				counts[3]++
-			} else if severity == "unknown" {
+			} else if severity == models.SEVERITY_LEVEL_UNKNOWN {
 				counts[4]++
 			}
 		}
