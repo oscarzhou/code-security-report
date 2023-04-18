@@ -19,6 +19,8 @@ binary:
 	GOOS="$(PLATFORM)" GOARCH="$(ARCH)" CGO_ENABLED=0 go build -a --installsuffix cgo --ldflags '-s' -o dist/$(bin)
 
 build: binary 
+	mkdir -p dist/templates
+	cp templates/*.tmpl dist/templates
 	@echo "done."
 
 image: build
