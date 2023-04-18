@@ -29,21 +29,21 @@ func (ss *SeverityStat) Total() int64 {
 }
 
 func (ss *SeverityStat) Summarize() string {
-	stringBuilder := fmt.Sprintf("Severity Statistic:\n")
+	stringBuilder := fmt.Sprintf("Severity Statistic: ")
 	if ss.Critical > 0 {
-		stringBuilder = fmt.Sprintf("%sCritical:%d\n", stringBuilder, ss.Critical)
+		stringBuilder = fmt.Sprintf("%sCritical:%d | ", stringBuilder, ss.Critical)
 	}
 	if ss.High > 0 {
-		stringBuilder = fmt.Sprintf("%sHigh:%d\n", stringBuilder, ss.High)
+		stringBuilder = fmt.Sprintf("%sHigh:%d | ", stringBuilder, ss.High)
 	}
 	if ss.Medium > 0 {
-		stringBuilder = fmt.Sprintf("%sMedium:%d\n", stringBuilder, ss.Medium)
+		stringBuilder = fmt.Sprintf("%sMedium:%d | ", stringBuilder, ss.Medium)
 	}
 	if ss.Low > 0 {
-		stringBuilder = fmt.Sprintf("%sLow:%d\n", stringBuilder, ss.Low)
+		stringBuilder = fmt.Sprintf("%sLow:%d | ", stringBuilder, ss.Low)
 	}
 	if ss.Unknown > 0 {
-		stringBuilder = fmt.Sprintf("%sUnknown:%d\n", stringBuilder, ss.Unknown)
+		stringBuilder = fmt.Sprintf("%sUnknown:%d | ", stringBuilder, ss.Unknown)
 	}
 	if ss.Total() == 0 {
 		stringBuilder = fmt.Sprintf("%sNothing found", stringBuilder)
