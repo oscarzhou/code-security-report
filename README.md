@@ -28,7 +28,7 @@ if: >-
     github.ref== 'refs/heads/master'
 id: set-matrix
 run: | 
-    result=$(docker run --rm -v /home/runner/work/repo:/data oscarzhou/code-security-report:latest summary --report-type=snyk --path="/data/snyk.json" --output-type=matrix)
+    result=$(docker run --rm -v /home/runner/work/repo:/data portainerci/code-security-report:latest summary --report-type=snyk --path="/data/snyk.json" --output-type=matrix)
     echo "js_result=${result}" >> $GITHUB_OUTPUT
 ```
 
@@ -41,7 +41,7 @@ if: >-
     github.ref != 'refs/heads/master'
 id: set-diff-matrix
 run: | 
-    result=$(docker run --rm -v /home/runner/work/repo:/data oscarzhou/code-security-report:latest diff --report-type=snyk --path="/data/go-snyk-feature.json" --compare-to="/data/go-snyk-develop.json" -output-type=matrix)
+    result=$(docker run --rm -v /home/runner/work/repo:/data portainerci/code-security-report:latest diff --report-type=snyk --path="/data/go-snyk-feature.json" --compare-to="/data/go-snyk-develop.json" -output-type=matrix)
     echo "js_diff_result=${result}" >> $GITHUB_OUTPUT
 ```
 
@@ -50,7 +50,7 @@ run: |
 ```
 - name: Export scan result to html file 
 run: | 
-    $(docker run --rm -v ${{ github.workspace }}:/data oscarzhou/code-security-report:latest summary --report-type=snyk --path="/data/snyk.json" --output-type=table --export --export-filename="/data/go-result")
+    $(docker run --rm -v ${{ github.workspace }}:/data portainerci/code-security-report:latest summary --report-type=snyk --path="/data/snyk.json" --output-type=table --export --export-filename="/data/go-result")
 
 - name: Upload go result html file
 uses: actions/upload-artifact@v3
@@ -64,7 +64,7 @@ with:
 ```
 - name: Export scan result to html file 
 run: | 
-    $(docker run --rm -v ${{ github.workspace }}:/data oscarzhou/code-security-report:latest diff --report-type=snyk --path="/data/go-snyk-feature.json" --compare-to="/data/go-snyk-develop.json" --output-type=table --export --export-filename="/data/go-result")
+    $(docker run --rm -v ${{ github.workspace }}:/data portainerci/code-security-report:latest diff --report-type=snyk --path="/data/go-snyk-feature.json" --compare-to="/data/go-snyk-develop.json" --output-type=table --export --export-filename="/data/go-result")
 
 - name: Upload go result html file
 uses: actions/upload-artifact@v3
@@ -84,22 +84,29 @@ with:
 
 ```
 [
-   {
-      "ScannedObjects": 365,
-      "critical": 0,
-      "high": 3,
-      "medium": 2,
-      "low": 0,
-      "unknown": 0,
-      "total": 5,
-      "FixableCritical": 0,
-      "FixableHigh": 2,
-      "FixableMedium": 0,
-      "FixableLow": 0,
-      "FixableUnknown": 0,
-      "summary": "Tested 365 dependencies for known issues. Total: High:3 Medium:2",
-      "status": "failure"
-   }
+	{
+		"ScannedObjects": 365,
+		"SeverityStat": {
+			"critical": 0,
+			"high": 3,
+			"medium": 0,
+			"low": 0,
+			"unknown": 0
+		},
+		"total": 3,
+		"FixableSeverityStat": {
+			"critical": 0,
+			"high": 2,
+			"medium": 0,
+			"low": 0,
+			"unknown": 0
+		},
+		"Languages": [
+			"js"
+		],
+		"summary": "Tested 365 dependencies for known issues.  Severity Statistic: High:3 ",
+		"status": "success"
+	}
 ]
 ```
 
@@ -111,58 +118,75 @@ with:
 
 ```
 [
-  {
-     "Base": {
-         "ScannedObjects": 365,
-         "critical": 0,
-         "high": 3,
-         "medium": 0,
-         "low": 0,
-         "unknown": 0,
-         "total": 3,
-         "FixableCritical": 0,
-         "FixableHigh": 2,
-         "FixableMedium": 0,
-         "FixableLow": 0,
-         "FixableUnknown": 0,
-         "summary": "Tested 365 dependencies for known issues. Total: High:3",
-         "status": "failure"
-     },
-     "Fixed": {
-         "ScannedObjects": 0,
-         "critical": 0,
-         "high": 0,
-         "medium": 0,
-         "low": 0,
-         "unknown": 0,
-         "total": 0,
-         "FixableCritical": 0,
-         "FixableHigh": 0,
-         "FixableMedium": 0,
-         "FixableLow": 0,
-         "FixableUnknown": 0,
-         "summary": "Tested 365 dependencies for known issues. Total: Nothing found",
-         "status": ""
-     },
-     "NewFound": {
-         "ScannedObjects": 0,
-         "critical": 0,
-         "high": 0,
-         "medium": 2,
-         "low": 0,
-         "unknown": 0,
-         "total": 2,
-         "FixableCritical": 0,
-         "FixableHigh": 0,
-         "FixableMedium": 0,
-         "FixableLow": 0,
-         "FixableUnknown": 0,
-         "summary": "Tested 365 dependencies for known issues. Total: Medium:2",
-         "status": ""
-     },
-     "Summary": "Base summary:Tested 365 dependencies for known issues. Total: High:3, Fixed summary:Tested 365 dependencies for known issues. Total: Nothing found, New found summary:Tested 365 dependencies for known issues. Total: Medium:2.",
-     "Status": "failure"
-  }
+	{
+		"Base": {
+			"ScannedObjects": 426,
+			"SeverityStat": {
+				"critical": 0,
+				"high": 2,
+				"medium": 6,
+				"low": 0,
+				"unknown": 0
+			},
+			"total": 8,
+			"FixableSeverityStat": {
+				"critical": 0,
+				"high": 1,
+				"medium": 2,
+				"low": 0,
+				"unknown": 0
+			},
+			"Languages": [
+				"js"
+			],
+			"summary": "Tested 426 dependencies for known issues.  Severity Statistic: High:2 Medium:6 ",
+			"status": "success"
+		},
+		"Fixed": {
+			"ScannedObjects": 0,
+			"SeverityStat": {
+				"critical": 0,
+				"high": 0,
+				"medium": 0,
+				"low": 0,
+				"unknown": 0
+			},
+			"total": 0,
+			"FixableSeverityStat": {
+				"critical": 0,
+				"high": 0,
+				"medium": 0,
+				"low": 0,
+				"unknown": 0
+			},
+			"Languages": null,
+			"summary": "Tested 450 dependencies for known issues.  Severity Statistic: Nothing found",
+			"status": ""
+		},
+		"NewFound": {
+			"ScannedObjects": 0,
+			"SeverityStat": {
+				"critical": 0,
+				"high": 0,
+				"medium": 3,
+				"low": 0,
+				"unknown": 0
+			},
+			"total": 3,
+			"FixableSeverityStat": {
+				"critical": 0,
+				"high": 0,
+				"medium": 0,
+				"low": 0,
+				"unknown": 0
+			},
+			"Languages": null,
+			"summary": "Tested 450 dependencies for known issues.  Severity Statistic: Medium:3 ",
+			"status": ""
+		},
+		"Summary": "Base summary:Tested 426 dependencies for known issues.  Severity Statistic: High:2 Medium:6  | Fixed summary:Tested 450 dependencies for known issues.  Severity Statistic: Nothing found | New found summary:Tested 450 dependencies for known issues.  Severity Statistic: Medium:3 .",
+		"Status": "failure"
+	}
 ]
 ```
 
@@ -176,7 +200,7 @@ with:
 
 ### 5. Debug with `inspect` command
 
-`docker run --rm -v $PWD/fixtures:/data oscarzhou/code-security-report:latest inspect --target-dir=/data`
+`docker run --rm -v $PWD/fixtures:/data portainerci/code-security-report:latest inspect --target-dir=/data`
 
 ### 6. Check version
 
@@ -186,11 +210,11 @@ with:
 
 ### 1. Run with docker container
 
-`docker run --rm -v $PWD/fixtures:/data oscarzhou/code-security-report:latest summary --report-type=snyk --path="/data/snyk.json"`
+`docker run --rm -v $PWD/fixtures:/data portainerci/code-security-report:latest summary --report-type=snyk --path="/data/snyk.json"`
 
 ### 2. Export with docker container
 
-`docker run --rm -v $PWD/fixtures:/data oscarzhou/code-security-report:latest diff --report-type=snyk --path="./data/snyk-feature.json" --compare-to="./data/snyk-develop.json" --output-type=table --export --export-filename="./data/snyk-diff"`
+`docker run --rm -v $PWD/fixtures:/data portainerci/code-security-report:latest diff --report-type=snyk --path="./data/snyk-feature.json" --compare-to="./data/snyk-develop.json" --output-type=table --export --export-filename="./data/snyk-diff"`
 
 ## Command detail
 
